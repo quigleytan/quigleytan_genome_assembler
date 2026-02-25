@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
-project(M20EP-tequigle)
+project(M30EP-tequigle)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(M2OEP-tequigle
+add_executable(M3OEP-tequigle
         main.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
@@ -33,7 +33,7 @@ add_executable(AssemblyTests
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 
-target_include_directories(M2OEP-tequigle PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(M3OEP-tequigle PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(InitializationTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(ProcessingTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(AssemblyTests PRIVATE ${PROJECT_INCLUDE_DIR})
