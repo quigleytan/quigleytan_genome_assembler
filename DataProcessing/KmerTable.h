@@ -14,13 +14,12 @@
  * stronger mixing function if needed.
  */
 
-#ifndef M20EP_TEQUIGLE_KMER_TABLE_H
-#define M20EP_TEQUIGLE_KMER_TABLE_H
+#ifndef KMER_TABLE_H
+#define KMER_TABLE_H
 
 #include <cstdint>
 #include <vector>
 #include <cmath>
-
 
 #include "DataProcessing/OpenAddressingTable.h"
 
@@ -96,9 +95,10 @@ public:
      * @breif Getter method for k.
      * @return k The kmer size for this table.
      */
-    size_t getK() const {
+    [[nodiscard]] size_t getK() const {
         return k;
     }
 
 };
-#endif //M20EP_TEQUIGLE_KMER_TABLE_H
+
+#endif //KMER_TABLE_H

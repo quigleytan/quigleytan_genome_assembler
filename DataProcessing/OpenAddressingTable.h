@@ -9,8 +9,8 @@
  * stronger mixing function if needed.
  */
 
-#ifndef M20EP_TEQUIGLE_OPEN_ADDRESSING_TABLE_H
-#define M20EP_TEQUIGLE_OPEN_ADDRESSING_TABLE_H
+#ifndef OPEN_ADDRESSING_TABLE_H
+#define OPEN_ADDRESSING_TABLE_H
 
 #include <string>
 #include <vector>
@@ -176,6 +176,7 @@ public:
     }
 
     // OPEN ADDRESSING TABLE METHODS
+    virtual ~OpenAddressingTable() = default;
 
     /**
      * @brief Main constructor for OpenAddressingTable.
@@ -186,7 +187,7 @@ public:
      *
      * @param initialSize initial size for construction of the hash table.
      */
-    OpenAddressingTable(size_t initialSize = 101) {
+    OpenAddressingTable(int initialSize = 101) {
         items.resize(nextPrime(initialSize));
         numItems = 0;
     }
@@ -262,4 +263,4 @@ public:
     }
 
 };
-#endif //M20EP_TEQUIGLE_OPEN_ADDRESSING_TABLE_H
+#endif //OPEN_ADDRESSING_TABLE_H

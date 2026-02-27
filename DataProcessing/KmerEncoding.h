@@ -15,14 +15,15 @@
  *   results back to users.
  */
 
-#ifndef M20EP_TEQUIGLE_KMERENCODER_H
-#define M20EP_TEQUIGLE_KMERENCODER_H
+#ifndef KMER_ENCODER_H
+#define KMER_ENCODER_H
 
 #include <cstdint>
 #include <string>
 #include "KmerTable.h"
 
 class KmerEncoding {
+
 private:
 
     /**
@@ -108,5 +109,7 @@ public:
      * @param table Table to populate with encoded k-mers.
      */
     static void encodeSequence(const std::string& dna, size_t k, KmerTable& table);
+
 };
-#endif //M20EP_TEQUIGLE_KMERENCODER_H
+
+#endif //KMER_ENCODER_H

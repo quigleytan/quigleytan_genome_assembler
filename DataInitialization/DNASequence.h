@@ -20,6 +20,7 @@
 #include <string>
 
 class DNASequence {
+
 private:
 
     // Variables
@@ -106,4 +107,5 @@ public:
     friend bool operator != (const DNASequence &sequenceOne, const DNASequence &sequenceTwo);
 
 };
+
 #endif //DNA_SEQUENCE_H
