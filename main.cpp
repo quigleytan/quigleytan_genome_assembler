@@ -14,12 +14,12 @@
 
 // Functions
 int getIntFromUser();
+
 DNASequence getSequenceFromUser(std::string message, int sizeLimit);
 
 int main() {
 
     std::ifstream file("../Data/genome_small_test.fna");
-    //std::ifstream file("../Data/small_test.fna");
 
     auto genomeOpt = SequenceReader::readFasta(file);
 

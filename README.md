@@ -20,7 +20,7 @@ Implementation of data structures to hold, analyze, and conduct basic analysis o
 ### Module 2: DNA Sequence Handling and File I/O
 Allow proper file reading and input of data from FASTA files.
 - `SequenceReader`: Reads DNA sequences from FASTA files.
-- `OpenAddressingTable`: Quadratic probing hash table implementation.
+- `OpenAddressingTable`: Linear probing hash table implementation.
 - `KmerTable`: Child class of `OpenAddressingTable` efficient k-mer storage and retrieval.
 - `DeBruijnGraph`: Writes DNA sequences to FASTA files, has an `OpenAddressingTable` for node storage. Does not compress
 edges, as this is crucial from Eulerian walk assembly.

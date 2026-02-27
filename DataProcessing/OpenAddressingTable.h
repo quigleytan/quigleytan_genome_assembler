@@ -1,7 +1,7 @@
 /*
  * OpenAddressingTable.h
  * Summary:
- * - General quadratic probing hash table.
+ * - General linear probing hash table.
  * Important notes:
  * - Find and insert return a pointer to the item.
  * TODO items for future work;
@@ -204,7 +204,7 @@ public:
     /**
      * @brief Inserts an item into the table with the specified key.
      *
-     * Inserts an item into the table using a quadratic probing strategy to resolve collisions.
+     * Inserts an item into the table using a linear probing strategy to resolve collisions.
      * If the key already exists, the onDuplicate method is called to handle the duplicate key scenario.
      *
      * @param key
@@ -222,7 +222,7 @@ public:
 
         while (items[index].status == TAKEN && items[index].key != key) {
             i++;
-            index = (index + i*i) % items.size();
+            index = (index + i) % items.size(); // linear probing
         }
 
         if (items[index].status == TAKEN) {
@@ -243,7 +243,7 @@ public:
     /**
      * @brief Searches the hash table for an entry with the specified key.
      *
-     * Performs a lookup using the same probing strategy as insertion (quadratic probing)
+     * Performs a lookup using the same probing strategy as insertion (linear probing)
      * starting from the hashed index of the key.
      *
      * @param key Key to search for.
@@ -256,7 +256,7 @@ public:
             if (items[index].status == TAKEN && items[index].key == key)
                 return &items[index].value;
             i++;
-            index = (index + i*i) % items.size();
+            index = (index + i) % items.size();
         }
         return nullptr;
     }
