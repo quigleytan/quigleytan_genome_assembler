@@ -6,10 +6,12 @@
  * - Graph nodes are k-1 mers, transitions are represented as full kmers.
  * Important notes:
  * - IMPORTANT: All kmer and node lookups should already be encoded as an u_int64.
+ * - Graph stored in a linear probing, open addressing hash table, with an encoded k-1mer (NodeId) as the key and
+ *   the struct NodeData in value.
  */
 
-#ifndef M20EP_TEQUIGLE_DEBRUIJNGRAPH_H
-#define M20EP_TEQUIGLE_DEBRUIJNGRAPH_H
+#ifndef DE_BRUIJN_GRAPH_H
+#define DE_BRUIJN_GRAPH_H
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -103,4 +105,4 @@ public:
 
 };
 
-#endif //M20EP_TEQUIGLE_DEBRUIJNGRAPH_H
+#endif //DE_BRUIJN_GRAPH_H
