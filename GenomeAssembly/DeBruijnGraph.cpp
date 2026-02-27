@@ -24,15 +24,15 @@ size_t DeBruijnGraph::getEdgeCount() const {
 }
 
 const DeBruijnGraph::NodeData *DeBruijnGraph::findNode(NodeId node) const{
-    return table.find(node);
+    return table_.find(node);
 }
 
 void DeBruijnGraph::addKmer(uint64_t inputKmer) {
-    // Derives k-1 mers from the input
+    // Split k-mer into prefix and suffix (k-1)-mers
     auto [prefix, suffix] = chop(inputKmer);
 
-    auto [from, prefixNew] = table.insert(prefix);
-    auto [to,   suffixNew] = table.insert(suffix);
+    auto [from, prefixNew] = table_.insert(prefix);
+    auto [to,   suffixNew] = table_.insert(suffix);
 
     // Updates the number of nodes in the graph if it is a new instance of a k-1 mer.
     if (prefixNew) nodeCount_++;

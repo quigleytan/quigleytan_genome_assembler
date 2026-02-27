@@ -48,7 +48,7 @@ private:
         void incrementInDegree() { ++inDegree_; }
     };
 
-    OpenAddressingTable<NodeId, NodeData> table;
+    OpenAddressingTable<NodeId, NodeData> table_;
 
     /**
      * @brief Extracts k-1 prefix and suffix to create nodes.
