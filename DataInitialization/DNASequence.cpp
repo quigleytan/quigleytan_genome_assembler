@@ -3,7 +3,7 @@
 
 // Struct to allow for easier return of data
 struct AnalysisResult {
-    std::string reverseSequence;  // Reverse complement sequence
+    std::string complement;       // Complement sequence
     int gcTotal;                  // Number of G/C bases
     double gcPercent;             // Percentage of G/C
 };
@@ -15,15 +15,15 @@ DNASequence::AnalysisResult DNASequence::analyzeSequence(const std::string& inpu
         throw DNASequenceException("Sequence is empty");
     }
 
-    std::string reverse;
+    std::string complement;
     int gcCount = 0;
 
     for (char base : inputSequence) {
         switch(base) {
-            case 'A': reverse += 'T'; break;
-            case 'T': reverse += 'A'; break;
-            case 'C': reverse += 'G'; gcCount++; break;
-            case 'G': reverse += 'C'; gcCount++; break;
+            case 'A': complement += 'T'; break;
+            case 'T': complement += 'A'; break;
+            case 'C': complement += 'G'; gcCount++; break;
+            case 'G': complement += 'C'; gcCount++; break;
             // Throws an exception if inputSequence contains an invalid base
             default: throw DNASequenceException("Invalid base: " + std::string(1, base));
         }
@@ -31,51 +31,43 @@ DNASequence::AnalysisResult DNASequence::analyzeSequence(const std::string& inpu
     // G and C base percentage calculation
     double gcPercent = double(gcCount) / double(inputSequence.length());
 
-    return {reverse, gcCount, gcPercent};
+    return {complement, gcCount, gcPercent};
 }
 
 // Constructor
 DNASequence::DNASequence(const std::string& name, const std::string& inputSequence)
-    : sequence(inputSequence),
-    length(inputSequence.length()) {
-    this->name = name;
+    : sequence_(inputSequence),
+    length_(inputSequence.length()) {
+    this->name_ = name;
     AnalysisResult analysis = analyzeSequence(inputSequence);
-    complementSequence = analysis.complementSequence;
-    gcTotal = analysis.gcTotal;
-    gcPercent = analysis.gcPercent;
-}
-
-DNASequence::DNASequence() {
-    sequence = "";
-    complementSequence = "";
-    gcTotal = 0;
-    gcPercent = 0.0;
-    length = 0;
+    complementSequence_ = analysis.complementSequence_;
+    gcTotal_ = analysis.gcTotal_;
+    gcPercent_ = analysis.gcPercent_;
 }
 
 // Getters
 const std::string& DNASequence::getSequence() const {
-    return sequence;
+    return sequence_;
 }
 
 const std::string& DNASequence::getComplement() const {
-    return complementSequence;
+    return complementSequence_;
 }
 
 const std::string& DNASequence::getName() const {
-    return name;
+    return name_;
 }
 
 size_t DNASequence::getLength() const {
-    return length;
+    return length_;
 }
 
 int DNASequence::getGCCount() const {
-    return gcTotal;
+    return gcTotal_;
 }
 
 double DNASequence::getGCPercent() const {
-    return gcPercent;
+    return gcPercent_;
 }
 
 // Comparison overloaded operators used to compare the composition of two sequences

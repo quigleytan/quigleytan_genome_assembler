@@ -7,7 +7,7 @@
 #include "CustomExceptions/DNASequenceException.h"
 #include "CustomExceptions/NodeNotFoundException.h"
 #include "DataProcessing//KmerTable.h"
-#include <ostream>
+#include <iostream>
 
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "DataInitialization/SequenceReader.h"
