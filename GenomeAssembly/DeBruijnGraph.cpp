@@ -26,6 +26,10 @@ size_t DeBruijnGraph::getEdgeCount() const {
     return edgeCount;
 }
 
+OpenAddressingTable<uint64_t, DeBruijnGraph::NodeData>& DeBruijnGraph::getGraph() {
+    return this->table;
+}
+
 bool DeBruijnGraph::contains(uint64_t node) const {
     return table.find(node) != nullptr;
 }
@@ -36,22 +40,6 @@ const std::vector<uint64_t>& DeBruijnGraph::getNeighbors(uint64_t node) const {
         throw NodeNotFoundException(node);
     }
     return nodeData->neighbors;
-}
-
-size_t DeBruijnGraph::getInDegree(uint64_t node) const {
-    auto* nodeData = table.find(node);
-    if (!nodeData) {
-        throw NodeNotFoundException(node);
-    }
-    return nodeData->inDegree;
-}
-
-size_t DeBruijnGraph::getOutDegree(uint64_t node) const {
-    auto* nodeData = table.find(node);
-    if (!nodeData) {
-        throw NodeNotFoundException(node);
-    }
-    return nodeData->neighbors.size();
 }
 
 void DeBruijnGraph::addKmer(uint64_t inputKmer) {

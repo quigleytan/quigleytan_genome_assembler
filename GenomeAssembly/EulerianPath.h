@@ -18,7 +18,7 @@ class EulerianPath {
 private:
 
     // Variables
-    const DeBruijnGraph& graph;
+    DeBruijnGraph& graph;
     std::vector<uint64_t> path;
     OpenAddressingTable<uint64_t, std::vector<uint64_t>> adjCopy;
 
@@ -28,7 +28,7 @@ private:
      *
      * @return Returns a boolean
      */
-    void initializeAdjacency() const;
+    void initializeAdjacency();
 
     /**
      *
@@ -41,6 +41,12 @@ private:
      * @return The start node.
      */
     uint64_t findStartNode() const;
+
+    /**
+     * @brief
+     * @return
+     */
+    void runHierholzer();
 
 public:
 

@@ -71,6 +71,12 @@ public:
     size_t getEdgeCount() const;
 
     /**
+     * @brief Returns the literal graph stored in DeBruijnGraph.
+     * @return Hash table representing the graph.
+     */
+    OpenAddressingTable<uint64_t, NodeData>& getGraph();
+
+    /**
      * @brief Checks whether the node is in the table.
      * @param node The node being inquired about.
      * @return Boolean value, true if the node is found in the graph.
@@ -83,20 +89,6 @@ public:
      * @return The vector list of neighbors to the k-1 mer node specified.
      */
     const std::vector<uint64_t>& getNeighbors(uint64_t node) const;
-
-    /**
-     * @brief Getter method for a node's inDegree value.
-     * @param node The k-1 mer to get inDegree from.
-     * @return The number of edges entering the node.
-     */
-    size_t getInDegree(uint64_t node) const;
-
-    /**
-     * @brief Getter method for a node's outDegree value.
-     * @param node The k-1 mer to get outDegree from.
-     * @return The number of edges leaving the node.
-     */
-    size_t getOutDegree(uint64_t node) const;
 
     /**
      * @brief
