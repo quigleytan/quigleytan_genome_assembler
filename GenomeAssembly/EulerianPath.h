@@ -6,8 +6,8 @@
  * -
  * Additional:
  * -
- * TODO items for future work;
  */
+
 #ifndef M30EP_TEQUIGLE_EULERIANPATH_H
 #define M30EP_TEQUIGLE_EULERIANPATH_H
 

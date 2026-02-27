@@ -24,16 +24,6 @@
 
 class KmerEncoding {
 private:
-    /**
-     * @brief Bitmask function to keep the last k bases.
-     *
-     * Used to ensure that only the last k bases are kept in roll(), which allows
-     * for continuous building of k-mers without overflow.
-     *
-     * @param k Set k-mer length.
-     * @return Bitmask for k-mer of length k.
-     */
-    static uint64_t bitmask(size_t k);
 
     /**
      * @brief Encodes a single DNA base into its corresponding 2-bit representation.
@@ -60,7 +50,27 @@ public:
 
     static constexpr size_t MAX_K_64 = 32;
 
+    /**
+     * @brief Validates that k is a usable kmer size for the graph.
+     *
+     * Throws an exception if k is not < 2 or k > 32, as using uint64_t (unsigned long long) causes undefined
+     * behavior to occur past K-values of 33 or more.
+     *
+     * @param k K-value that is being used to initialize the table.
+     * @return Returns the k value if valid, throws an exception if k is < 2 or k > 32.
+     */
+    static size_t validateK(size_t k);
 
+    /**
+     * @brief Bitmask function to keep the last k bases.
+     *
+     * Used to ensure that only the last k bases are kept in roll(), which allows
+     * for continuous building of k-mers without overflow.
+     *
+     * @param k Set k-mer length.
+     * @return Bitmask for k-mer of length k.
+     */
+    static uint64_t bitmask(size_t k);
 
     /**
      * @brief Encodes a k-mer string into its 2-bit representation.
@@ -99,5 +109,4 @@ public:
      */
     static void encodeSequence(const std::string& dna, size_t k, KmerTable& table);
 };
-
 #endif //M20EP_TEQUIGLE_KMERENCODER_H

@@ -59,18 +59,6 @@ private:
      */
     std::pair<NodeId, NodeId> chop(uint64_t kmer) const;
 
-    /**
-     * @brief Validates that k is a usable kmer size for the graph.
-     *
-     * Throws an exception if k is not < 2 or k > 32, as using uint64_t (unsigned long long) causes undefined
-     * behavior to occur past K-values of 33 or more.
-     *
-     * @param k K-value that is being used to initialize the table.
-     * @return Returns the k value if valid, throws an exception if k is < 2 or k > 32.
-     */
-    static size_t validateK(size_t k);
-
-
 public:
 
     /**
@@ -92,7 +80,7 @@ public:
 
     /**
      * @brief Returns the total edge counts in the graph.
-     * @return Number of edges (kmer transitons).
+     * @return Number of edges (kmer transitions).
      */
     size_t getEdgeCount() const;
 

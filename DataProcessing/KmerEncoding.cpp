@@ -3,11 +3,6 @@
 #include <stdexcept>
 #include "CustomExceptions/DNASequenceException.h"
 
-uint64_t KmerEncoding::bitmask(size_t k) {
-    // Bitmask to keep last k bases (2 bits per base)
-    return (1ULL << (2 * k)) - 1;
-}
-
 uint64_t KmerEncoding::encodeBase(char base) {
     // Assigning 2-bit values to each base
     switch (base) {
@@ -26,6 +21,19 @@ uint64_t KmerEncoding::roll(uint64_t prev, char next, size_t k) {
     prev |= encodeBase(next);
     prev &= bitmask(k); // Trims the sequence to size k-kmers
     return prev;
+}
+
+// Helper functions for proper k-value screening
+size_t KmerEncoding::validateK(size_t k) {
+    if (k < 2 || k > KmerEncoding::MAX_K_64)
+        throw std::invalid_argument(
+            "k must be between 2 and 32 for 64-bit 2-bit encoding");
+    return k;
+}
+
+uint64_t KmerEncoding::bitmask(size_t k) {
+    // Bitmask to keep last k bases (2 bits per base)
+    return (1ULL << (2 * k)) - 1;
 }
 
 // START OF ENCODING SEQUENCE
@@ -62,20 +70,9 @@ void KmerEncoding::encodeSequence(const std::string &dna, size_t k, KmerTable &t
     uint64_t kmer = encode(dna.substr(0, k));
     table.insert(kmer);
 
-    // Roll through the rest of the sequence
+    // Rolls through the rest of the sequence.
     for (size_t i = k; i < dna.length(); ++i) {
         kmer = roll(kmer, dna[i], k);
         table.insert(kmer);
     }
-}
-
-inline size_t validateK(size_t k) {
-    if (k < 2 || k > KmerEncoding::MAX_K_64)
-        throw std::invalid_argument(
-            "k must be between 2 and 32 for 64-bit 2-bit encoding");
-    return k;
-}
-
-inline uint64_t makeMask(size_t kMinusOne) {
-    return (1ULL << (2 * kMinusOne)) - 1;
 }
