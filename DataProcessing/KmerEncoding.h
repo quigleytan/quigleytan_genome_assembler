@@ -4,15 +4,12 @@
  * Summary:
  * - Static class for encoding and rolling k-mers from DNA sequences.
  * - Rolling saves time by building on previous k-mer encoding.
- * - Primary function is to provide utility for encoding a kmer, and also
+ * - Primary function is to provide utility for encoding a kmer and also
  *   to encode an entire sequence into a KmerTable.
  * Important notes:
  * - Uses the key: A = 00, C = 01, G = 10, T = 11 for 2-bit encoding.
  * - All encoded kmers are stored as uint64_t.
  * - Used for quick storage and retrieval in hash tables.
- * TODO items for future work;
- * - Eventually will add support for a decoding function to help with reporting
- *   results back to users.
  */
 
 #ifndef KMER_ENCODER_H
@@ -36,7 +33,7 @@ private:
     /**
      * @brief Rolls the previous k-mer to create the next k-mer by adding a new base.
      *
-     * Shifts the previous k-mer left by 2 bits, adds the new base and applies a bitmask to ensure
+     * Shifts the previous k-mer left by 2 bits, adds the new base, and applies a bitmask to ensure
      * only the last k bases are kept.
      *
      * @param prev 2-bit encoded previous kmer as uint64_t.
@@ -76,7 +73,7 @@ public:
     /**
      * @brief Encodes a k-mer string into its 2-bit representation.
      *
-     * Encodes the entire k-mer by iterating through each base, shifting left and adding
+     * Encodes the entire k-mer by iterating through each base, shifting left, and adding
      * the corresponding 2-bit value. Used for the initial encoding before rolling and
      * for quick encoding of a single kmer.
      *
@@ -93,7 +90,7 @@ public:
      * Only for use with user interaction, keep everything encoded in logical implementation.
      *
      * @param kmer 2-bit encoded kmer as uint64_t.
-     * @param kmer The length of the k-mer.
+     * @param k The length of the k-mer.
      * @return Equivalent string representation.
      */
     static std::string decode(uint64_t kmer, size_t k);
@@ -102,7 +99,7 @@ public:
      * @brief Performs k-mer analysis on a DNA sequence and populates a KmerTable.
      *
      * Encodes and rolls through the DNA sequence to extract all k-mers, inserting them into the provided KmerTable.
-     * This generates counts and allows for analysis of k-mer frequency in the sequence.
+     * This generates counts and allows analyzing k-mer frequency in the sequence.
      *
      * @param dna DNA sequence string to extract k-mers from.
      * @param k K-mer size to use for encoding.

@@ -134,3 +134,5 @@ Implementation of an iterator: https://stackoverflow.com/questions/46431762/how-
 Reference source for usage of auto from Module 1
 
 Use of nodiscard: https://stackoverflow.com/questions/76489630/explanation-of-nodiscard-in-c17
+
+Use of explicit: https://www.geeksforgeeks.org/cpp/use-of-explicit-keyword-in-cpp/

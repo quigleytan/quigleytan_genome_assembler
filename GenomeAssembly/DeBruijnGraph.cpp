@@ -1,4 +1,5 @@
 #include "DeBruijnGraph.h"
+#include "DataProcessing/KmerEncoding.h"
 
 // Private
 std::pair<uint64_t, uint64_t> DeBruijnGraph::chop(uint64_t kmer) const {

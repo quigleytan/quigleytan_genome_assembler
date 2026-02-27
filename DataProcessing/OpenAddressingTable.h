@@ -119,9 +119,9 @@ public:
 
     public:
         /**
-         * @brief
-         * @param inputTable Input table to be iterated through
-         * @param index
+         * @brief Constructor for an iterator that allows for simple and complete scanning of the table.
+         * @param inputTable Input table to be iterated through.
+         * @param inputIndex The index to start iteration at.
          */
         iterator(OpenAddressingTable* inputTable, size_t inputIndex)
             : table(inputTable), index(inputIndex) {
@@ -142,7 +142,7 @@ public:
         }
 
         /**
-         * @brief Used in while loops to terminate once whole table is accessed.
+         * @brief Used in while loops to terminate once the whole table is accessed.
          * @param other The other integer being compared.
          * @return Returns a boolean, true if they are not equal.
          */
@@ -198,7 +198,7 @@ public:
      * @brief Returns the number of items in the table.
      * @return numItems The number of items in the table.
      */
-    size_t getNumItems() const {
+    [[nodiscard]] size_t getNumItems() const {
         return numItems;
     }
 

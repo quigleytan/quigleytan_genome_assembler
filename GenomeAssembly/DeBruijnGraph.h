@@ -2,7 +2,7 @@
  * DeBruijnGraph.h
  * Created by Tanner Quigley on 2/15/2026
  * Summary:
- * - Representation of a De Bruijn graph to be used for Eularian walks for genome assembly.
+ * - Representation of a De Bruijn graph to be used for Eulerian walks for genome assembly.
  * - Graph nodes are k-1 mers, transitions are represented as full kmers.
  * Important notes:
  * - IMPORTANT: All kmer and node lookups should already be encoded as an u_int64.
@@ -12,16 +12,13 @@
 
 #ifndef DE_BRUIJN_GRAPH_H
 #define DE_BRUIJN_GRAPH_H
+
 #include <cstdint>
-#include <optional>
 #include <vector>
-#include <stdexcept>
-#include "DataProcessing/KmerEncoding.h"
-#include "CustomExceptions/NodeNotFoundException.h"
 #include "DataProcessing/OpenAddressingTable.h"
 
-
 class DeBruijnGraph {
+
 private:
 
     // Variables
@@ -38,11 +35,11 @@ private:
         std::vector<uint64_t> neighbors_; // Outgoing edges only
         size_t inDegree_ = 0;             // Number of edges entering the node
 
-        const std::vector<uint64_t>& getNeighbors() const { return neighbors_; }
-        std::vector<uint64_t>& getNeighbors() { return neighbors_; }
+        [[nodiscard]] const std::vector<uint64_t>& getNeighbors() const { return neighbors_; }
+        [[nodiscard]] size_t getInDegree() const { return inDegree_; }
+        [[nodiscard]] size_t getOutDegree() const { return neighbors_.size(); }
 
-        size_t getInDegree() const { return inDegree_; }
-        size_t getOutDegree() const { return neighbors_.size(); }
+        std::vector<uint64_t>& getNeighbors() { return neighbors_; }
 
         void addNeighbor(uint64_t neighbor) { neighbors_.push_back(neighbor); }
         void incrementInDegree() { ++inDegree_; }
@@ -59,7 +56,7 @@ private:
      * @param kmer The kmer in which the prefix and suffix will be pulled from.
      * @return Returns a tuple containing k-1 prefix and suffix.
      */
-    std::pair<NodeId, NodeId> chop(uint64_t kmer) const;
+    [[nodiscard]] std::pair<NodeId, NodeId> chop(uint64_t kmer) const;
 
 public:
 
@@ -72,26 +69,26 @@ public:
      *
      * @param k The k size for the graph: k must be > 1.
      */
-    DeBruijnGraph(size_t k);
+    explicit DeBruijnGraph(size_t k);
 
     /**
      * @brief Returns the total node counts in the graph.
      * @return Number of nodes (k-1 mers).
      */
-    size_t getNodeCount() const;
+    [[nodiscard]] size_t getNodeCount() const;
 
     /**
      * @brief Returns the total edge counts in the graph.
      * @return Number of edges (kmer transitions).
      */
-    size_t getEdgeCount() const;
+    [[nodiscard]] size_t getEdgeCount() const;
 
     /**
      * @brief Checks table to the desired node.
      * @param queriedNode Encoded node to be found in the table.
      * @return Returns a pointer to the node requested, nullptr if not found.
      */
-    const NodeData *findNode(NodeId queriedNode) const;
+    [[nodiscard]] const NodeData *findNode(NodeId queriedNode) const;
 
     /**
      * @brief
