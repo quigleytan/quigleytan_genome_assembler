@@ -7,7 +7,7 @@ add_executable(M3OEP-tequigle
         main.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
-        DataProcessing/KmerEncoder.cpp
+        DataProcessing/KmerEncoding.cpp
         GenomeAssembly/DeBruijnGraph.cpp
         GenomeAssembly/EulerianPath.h
         GenomeAssembly/EulerianPath.cpp
@@ -20,7 +20,7 @@ add_executable(InitializationTests
 )
 
 add_executable(ProcessingTests
-        DataProcessing/KmerEncoder.cpp
+        DataProcessing/KmerEncoding.cpp
         DataProcessing/ProcessingTests.cpp
         DataInitialization/DNASequence.cpp
 )
@@ -28,7 +28,7 @@ add_executable(ProcessingTests
 add_executable(AssemblyTests
         GenomeAssembly/AssemblyTests.cpp
         GenomeAssembly/DeBruijnGraph.cpp
-        DataProcessing/KmerEncoder.cpp
+        DataProcessing/KmerEncoding.cpp
         DataInitialization/DNASequence.cpp
         GenomeAssembly/EulerianPath.h
         GenomeAssembly/EulerianPath.cpp

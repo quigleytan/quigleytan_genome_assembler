@@ -4,7 +4,7 @@
 
 #include "DeBruijnGraph.h"
 #include "DataInitialization/DNASequence.h"
-#include "DataProcessing/KmerEncoder.h"
+#include "DataProcessing/KmerEncoding.h"
 #include "DataProcessing/KmerTable.h"
 
 bool DebruijnGraphTests();
@@ -30,7 +30,7 @@ bool DebruijnGraphTests() {
 
     // Entering information into the KmerTable
     KmerTable kTable(genome.getLength(), k);
-    KmerEncoder::encodeSequence(genome.getSequence(), k, kTable);
+    KmerEncoding::encodeSequence(genome.getSequence(), k, kTable);
 
     // Initializing the De Bruijn graph
     DeBruijnGraph graph(k);
@@ -55,32 +55,32 @@ bool DebruijnGraphTests() {
     }
 
     // Checking AG node logic
-    if (graph.getInDegree(KmerEncoder::encodeKmer("AG")) != 1) {
+    if (graph.getInDegree(KmerEncoding::encode("AG")) != 1) {
         passed = false;
         std::cout << "AG In degree incorrect" << std::endl;
     }
 
-    if (graph.getOutDegree(KmerEncoder::encodeKmer("AG")) != 2) {
+    if (graph.getOutDegree(KmerEncoding::encode("AG")) != 2) {
         passed = false;
         std::cout << "AG Out degree incorrect" << std::endl;
     }
 
     // Checking GT node logic
-    if (graph.getInDegree(KmerEncoder::encodeKmer("GT")) != 3) {
+    if (graph.getInDegree(KmerEncoding::encode("GT")) != 3) {
         passed = false;
         std::cout << "GT In degree incorrect" << std::endl;
     }
 
-    if (graph.getOutDegree(KmerEncoder::encodeKmer("GT")) != 2) {
+    if (graph.getOutDegree(KmerEncoding::encode("GT")) != 2) {
         passed = false;
         std::cout << "GT Out degree incorrect" << std::endl;
     }
 
     // The remaining nodes should have in/out degrees of 1
     std::vector<uint64_t> remainingNodes = {
-        KmerEncoder::encodeKmer("TG"), KmerEncoder::encodeKmer("GC"),
-        KmerEncoder::encodeKmer("CG"), KmerEncoder::encodeKmer("TC"),
-        KmerEncoder::encodeKmer("CA")
+        KmerEncoding::encode("TG"), KmerEncoding::encode("GC"),
+        KmerEncoding::encode("CG"), KmerEncoding::encode("TC"),
+        KmerEncoding::encode("CA")
     };
 
     for (uint64_t node : remainingNodes) {

@@ -3,43 +3,28 @@
 // Private
 std::pair<uint64_t, uint64_t> DeBruijnGraph::chop(uint64_t kmer) const {
     uint64_t prefix = kmer >> 2; // Naturally discards
-    uint64_t suffix = kmer & kMask;
+    uint64_t suffix = kmer & kMask_;
 
     return {prefix, suffix};
 }
 
 // Constructor
-DeBruijnGraph::DeBruijnGraph(size_t k) {
-    if (k < 2)
-        throw std::invalid_argument("k must be > 1");
-    this->k = k;
-    this->kMask = (1ULL << (2 * (k - 1))) - 1;
-}
+DeBruijnGraph::DeBruijnGraph(size_t k)
+    : k_(EncodingUtils::validateK(k)),
+      kMask_(EncodingUtils::makeMask(k_ - 1)) {}
 
 // Getters
 
 size_t DeBruijnGraph::getNodeCount() const {
-    return nodeCount;
+    return nodeCount_;
 }
 
 size_t DeBruijnGraph::getEdgeCount() const {
-    return edgeCount;
+    return edgeCount_;
 }
 
-OpenAddressingTable<uint64_t, DeBruijnGraph::NodeData>& DeBruijnGraph::getGraph() {
-    return this->table;
-}
-
-bool DeBruijnGraph::contains(uint64_t node) const {
-    return table.find(node) != nullptr;
-}
-
-const std::vector<uint64_t>& DeBruijnGraph::getNeighbors(uint64_t node) const {
-    auto* nodeData = table.find(node);
-    if (!nodeData) {
-        throw NodeNotFoundException(node);
-    }
-    return nodeData->neighbors;
+const DeBruijnGraph::NodeData *DeBruijnGraph::findNode(NodeId node) const{
+    return table.find(node);
 }
 
 void DeBruijnGraph::addKmer(uint64_t inputKmer) {
@@ -50,10 +35,10 @@ void DeBruijnGraph::addKmer(uint64_t inputKmer) {
     auto [to,   suffixNew] = table.insert(suffix);
 
     // Updates the number of nodes in the graph if it is a new instance of a k-1 mer.
-    if (prefixNew) nodeCount++;
-    if (suffixNew) nodeCount++;
+    if (prefixNew) nodeCount_++;
+    if (suffixNew) nodeCount_++;
 
-    from.neighbors.push_back(suffix);
-    to.inDegree++;
-    edgeCount++;
+    from.addNeighbor(suffix);
+    to.incrementInDegree();
+    edgeCount_++;
 }

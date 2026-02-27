@@ -1,5 +1,5 @@
 /*
- * KmerEncoder.h
+ * KmerEncoding.h
  * Created by Tanner Quigley on 1/30/2026.
  * Summary:
  * - Static class for encoding and rolling k-mers from DNA sequences.
@@ -22,7 +22,7 @@
 #include <string>
 #include "KmerTable.h"
 
-class KmerEncoder {
+class KmerEncoding {
 private:
     /**
      * @brief Bitmask function to keep the last k bases.
@@ -57,6 +57,11 @@ private:
     static uint64_t roll(uint64_t prev, char next, size_t k);
 
 public:
+
+    static constexpr size_t MAX_K_64 = 32;
+
+
+
     /**
      * @brief Encodes a k-mer string into its 2-bit representation.
      *
@@ -68,7 +73,7 @@ public:
      *
      * @return 2-bit encoded kmer as uint64_t.
      */
-    static uint64_t encodeKmer(const std::string& kmer);
+    static uint64_t encode(const std::string& kmer);
 
     /**
      * @brief Decodes a 2-bit encoded k-mer into its string representation.
@@ -80,7 +85,7 @@ public:
      * @param kmer The length of the k-mer.
      * @return Equivalent string representation.
      */
-    static std::string decodeKmer(uint64_t kmer, size_t k);
+    static std::string decode(uint64_t kmer, size_t k);
 
     /**
      * @brief Performs k-mer analysis on a DNA sequence and populates a KmerTable.

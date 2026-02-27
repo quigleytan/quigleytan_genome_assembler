@@ -1,13 +1,14 @@
-#include "KmerEncoder.h"
-#include "KmerTable.h"
+#include "KmerEncoding.h"
+
+#include <stdexcept>
 #include "CustomExceptions/DNASequenceException.h"
 
-uint64_t KmerEncoder::bitmask(size_t k) {
+uint64_t KmerEncoding::bitmask(size_t k) {
     // Bitmask to keep last k bases (2 bits per base)
     return (1ULL << (2 * k)) - 1;
 }
 
-uint64_t KmerEncoder::encodeBase(char base) {
+uint64_t KmerEncoding::encodeBase(char base) {
     // Assigning 2-bit values to each base
     switch (base) {
         case 'A': return 0b00;
@@ -19,7 +20,7 @@ uint64_t KmerEncoder::encodeBase(char base) {
 }
 
 // Rolls the previous k-mer to get the next one
-uint64_t KmerEncoder::roll(uint64_t prev, char next, size_t k) {
+uint64_t KmerEncoding::roll(uint64_t prev, char next, size_t k) {
     // Shift left to make space for the new base
     prev <<= 2;
     prev |= encodeBase(next);
@@ -28,7 +29,7 @@ uint64_t KmerEncoder::roll(uint64_t prev, char next, size_t k) {
 }
 
 // START OF ENCODING SEQUENCE
-uint64_t KmerEncoder::encodeKmer(const std::string& kmer) {
+uint64_t KmerEncoding::encode(const std::string& kmer) {
     uint64_t value = 0;
     for (char base : kmer) {
         value <<= 2; // Shift left to include the next base
@@ -37,7 +38,7 @@ uint64_t KmerEncoder::encodeKmer(const std::string& kmer) {
     return value;
 }
 
-std::string KmerEncoder::decodeKmer(uint64_t encoded, size_t k) {
+std::string KmerEncoding::decode(uint64_t encoded, size_t k) {
     std::string result(k, 'A');
 
     for (size_t i = 0; i < k; ++i) {
@@ -54,11 +55,11 @@ std::string KmerEncoder::decodeKmer(uint64_t encoded, size_t k) {
     return result;
 }
 
-void KmerEncoder::encodeSequence(const std::string &dna, size_t k, KmerTable &table){
+void KmerEncoding::encodeSequence(const std::string &dna, size_t k, KmerTable &table){
     if (dna.length() < k) return;
 
     // Encode first k-mer
-    uint64_t kmer = encodeKmer(dna.substr(0, k));
+    uint64_t kmer = encode(dna.substr(0, k));
     table.insert(kmer);
 
     // Roll through the rest of the sequence
@@ -66,4 +67,15 @@ void KmerEncoder::encodeSequence(const std::string &dna, size_t k, KmerTable &ta
         kmer = roll(kmer, dna[i], k);
         table.insert(kmer);
     }
+}
+
+inline size_t validateK(size_t k) {
+    if (k < 2 || k > KmerEncoding::MAX_K_64)
+        throw std::invalid_argument(
+            "k must be between 2 and 32 for 64-bit 2-bit encoding");
+    return k;
+}
+
+inline uint64_t makeMask(size_t kMinusOne) {
+    return (1ULL << (2 * kMinusOne)) - 1;
 }

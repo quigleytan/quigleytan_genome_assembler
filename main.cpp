@@ -3,7 +3,7 @@
 //
 #include <fstream>
 #include "DataInitialization/DNASequence.h"
-#include "DataProcessing/KmerEncoder.h"
+#include "DataProcessing/KmerEncoding.h"
 #include "CustomExceptions/DNASequenceException.h"
 #include "CustomExceptions/NodeNotFoundException.h"
 #include "DataProcessing//KmerTable.h"
@@ -31,12 +31,12 @@ int main() {
     int k = getIntFromUser();
     // Encoding sequence into k-mer table
     KmerTable kTable(genome.getLength(), k);
-    KmerEncoder::encodeSequence(genome.getSequence(), k, kTable);
+    KmerEncoding::encodeSequence(genome.getSequence(), k, kTable);
 
     // Getting k-mer from user to check count
     std::string kmer = getSequenceFromUser("Enter a k-mer sequence to check its count in the provided DNA sequence:", k).getSequence();
 
-    const size_t* p = kTable.find(KmerEncoder::encodeKmer(kmer));
+    const size_t* p = kTable.find(KmerEncoding::encode(kmer));
     size_t count = p ? *p : 0;
     std::cout << "Found: " << count << " instances of " << kmer << std::endl;
 
@@ -55,22 +55,24 @@ int main() {
         std::string nodeStr =
             getSequenceFromUser("Enter a (k-1)-mer node to inspect in the De Bruijn graph:", k - 1).getSequence();
 
-        uint64_t node = KmerEncoder::encodeKmer(nodeStr);
+        uint64_t node = KmerEncoding::encode(nodeStr);
 
         std::cout << "Node: " << nodeStr << "\n";
         std::cout << "Encoded: " << node << "\n";
 
-        if (!dbGraph.contains(node)) {
+        auto nodeData = dbGraph.findNode(node);
+
+        if (!dbGraph.findNode(node)) {
             std::cout << "Node not found in graph.\n";
         } else {
-            size_t inDeg  = dbGraph.getInDegree(node);
-            size_t outDeg = dbGraph.getOutDegree(node);
+            size_t inDeg  = dbGraph.;
+            size_t outDeg = ;
             const auto& nbrs = dbGraph.getNeighbors(node);
 
             std::cout << "In-degree:  " << inDeg << "\n";
             std::cout << "Out-degree: " << outDeg << "\n";
             std::cout << "Neighbors (encoded): ";
-            for (uint64_t n : nbrs) std::cout << KmerEncoder::decodeKmer(n, k - 1) << " ";
+            for (uint64_t n : nbrs) std::cout << KmerEncoding::decode(n, k - 1) << " ";
             std::cout << "\n";
         }
     } catch (const NodeNotFoundException& e) {

@@ -11,8 +11,10 @@
 #ifndef M20EP_TEQUIGLE_DEBRUIJNGRAPH_H
 #define M20EP_TEQUIGLE_DEBRUIJNGRAPH_H
 #include <cstdint>
+#include <optional>
 #include <vector>
 #include <stdexcept>
+#include "DataProcessing/KmerEncoding.h"
 #include "CustomExceptions/NodeNotFoundException.h"
 #include "DataProcessing/OpenAddressingTable.h"
 
@@ -21,18 +23,30 @@ class DeBruijnGraph {
 private:
 
     // Variables
-    size_t k;
-    uint64_t kMask;
-    size_t nodeCount = 0;
-    size_t edgeCount = 0;
+    const size_t k_;
+    const uint64_t kMask_;
+
+    size_t nodeCount_ = 0;
+    size_t edgeCount_ = 0;
+
+    using NodeId = uint64_t;
 
     // Note: outdegree is tracked by neighbors.size
     struct NodeData {
-        std::vector<uint64_t> neighbors; // Outgoing edges only
-        size_t inDegree = 0; // Number of edges entering the node
+        std::vector<uint64_t> neighbors_; // Outgoing edges only
+        size_t inDegree_ = 0;             // Number of edges entering the node
+
+        const std::vector<uint64_t>& getNeighbors() const { return neighbors_; }
+        std::vector<uint64_t>& getNeighbors() { return neighbors_; }
+
+        size_t getInDegree() const { return inDegree_; }
+        size_t getOutDegree() const { return neighbors_.size(); }
+
+        void addNeighbor(uint64_t neighbor) { neighbors_.push_back(neighbor); }
+        void incrementInDegree() { ++inDegree_; }
     };
 
-    OpenAddressingTable<uint64_t, NodeData> table;
+    OpenAddressingTable<NodeId, NodeData> table;
 
     /**
      * @brief Extracts k-1 prefix and suffix to create nodes.
@@ -43,7 +57,19 @@ private:
      * @param kmer The kmer in which the prefix and suffix will be pulled from.
      * @return Returns a tuple containing k-1 prefix and suffix.
      */
-    std::pair<uint64_t, uint64_t> chop(uint64_t kmer) const;
+    std::pair<NodeId, NodeId> chop(uint64_t kmer) const;
+
+    /**
+     * @brief Validates that k is a usable kmer size for the graph.
+     *
+     * Throws an exception if k is not < 2 or k > 32, as using uint64_t (unsigned long long) causes undefined
+     * behavior to occur past K-values of 33 or more.
+     *
+     * @param k K-value that is being used to initialize the table.
+     * @return Returns the k value if valid, throws an exception if k is < 2 or k > 32.
+     */
+    static size_t validateK(size_t k);
+
 
 public:
 
@@ -71,24 +97,11 @@ public:
     size_t getEdgeCount() const;
 
     /**
-     * @brief Returns the literal graph stored in DeBruijnGraph.
-     * @return Hash table representing the graph.
+     * @brief Checks table to the desired node.
+     * @param queriedNode Encoded node to be found in the table.
+     * @return Returns a pointer to the node requested, nullptr if not found.
      */
-    OpenAddressingTable<uint64_t, NodeData>& getGraph();
-
-    /**
-     * @brief Checks whether the node is in the table.
-     * @param node The node being inquired about.
-     * @return Boolean value, true if the node is found in the graph.
-     */
-    bool contains(uint64_t node) const;
-
-    /**
-     * @brief Returns list of neighbors.
-     * @param node The k-1 mer to be checked for neighbors.
-     * @return The vector list of neighbors to the k-1 mer node specified.
-     */
-    const std::vector<uint64_t>& getNeighbors(uint64_t node) const;
+    const NodeData *findNode(NodeId queriedNode) const;
 
     /**
      * @brief
@@ -98,7 +111,7 @@ public:
      *
      * @param inputKmer The kmer whose derived k-1mers will be added to the table.
      */
-    void addKmer(uint64_t inputKmer);
+    void addKmer(NodeId inputKmer);
 
 };
 
