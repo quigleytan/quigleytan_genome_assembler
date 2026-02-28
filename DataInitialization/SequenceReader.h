@@ -11,11 +11,12 @@
  * - Potentially add more support for other files
  */
 
-#ifndef M20EP_TEQUIGLE_SEQUENCE_READER_H
-#define M20EP_TEQUIGLE_SEQUENCE_READER_H
+#ifndef SEQUENCE_READER_H
+#define SEQUENCE_READER_H
 
 #include "DNASequence.h"
 #include <optional>
+#include <istream>
 
 class SequenceReader {
 
@@ -36,4 +37,4 @@ public:
     static std::optional<DNASequence> readFastq(std::istream& in);
 };
 
-#endif //M20EP_TEQUIGLE_SEQUENCE_READER_H
+#endif //SEQUENCE_READER_H

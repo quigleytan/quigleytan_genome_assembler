@@ -2,15 +2,19 @@
 // Created by quigl on 1/27/2026.
 //
 #include <fstream>
-#include "DataInitialization/DNASequence.h"
-#include "DataProcessing/KmerEncoding.h"
-#include "CustomExceptions/DNASequenceException.h"
-#include "CustomExceptions/NodeNotFoundException.h"
-#include "DataProcessing//KmerTable.h"
 #include <iostream>
 
-#include "GenomeAssembly/DeBruijnGraph.h"
+#include "CustomExceptions/DNASequenceException.h"
+#include "CustomExceptions/NodeNotFoundException.h"
+
+#include "DataInitialization/DNASequence.h"
 #include "DataInitialization/SequenceReader.h"
+
+#include "DataProcessing/KmerEncoding.h"
+#include "DataProcessing//KmerTable.h"
+
+#include "GenomeAssembly/DeBruijnGraph.h"
+
 
 // Functions
 int getIntFromUser();
@@ -60,19 +64,18 @@ int main() {
         std::cout << "Node: " << nodeStr << "\n";
         std::cout << "Encoded: " << node << "\n";
 
-        auto nodeData = dbGraph.findNode(node);
+        auto foundNode = dbGraph.findNode(node);
 
-        if (!dbGraph.findNode(node)) {
+        if (!foundNode) {
             std::cout << "Node not found in graph.\n";
         } else {
-            size_t inDeg  = dbGraph.;
-            size_t outDeg = ;
-            const auto& nbrs = dbGraph.getNeighbors(node);
+            size_t inDeg  = foundNode->getInDegree();
+            size_t outDeg = foundNode->getOutDegree();
 
             std::cout << "In-degree:  " << inDeg << "\n";
             std::cout << "Out-degree: " << outDeg << "\n";
             std::cout << "Neighbors (encoded): ";
-            for (uint64_t n : nbrs) std::cout << KmerEncoding::decode(n, k - 1) << " ";
+            for (uint64_t n : foundNode->getNeighbors()) std::cout << KmerEncoding::decode(n, k - 1) << " ";
             std::cout << "\n";
         }
     } catch (const NodeNotFoundException& e) {
