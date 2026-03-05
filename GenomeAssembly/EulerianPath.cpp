@@ -1,25 +1,17 @@
 #include "EulerianPath.h"
-#include <utility>
+#include "GenomeAssembly/DeBruijnGraph.h"
 
-// private
-void EulerianPath::initializeAdjacency() {
+void EulerianPath::initializeAdjacency();
 
-}
+bool EulerianPath::isEulerian() const;
 
-bool EulerianPath::isEulerian() const {
-}
+uint64_t EulerianPath::findStartNode() const;
 
-uint64_t EulerianPath::findStartNode() const {
 
-}
+std::vector<uint64_t> EulerianPath::runHierholzer(uint64_t startNode);
 
-// public
-EulerianPath::EulerianPath(DeBruijnGraph graph)
-    : graph(std::move(graph)) {
-}
+//public
 
-std::vector<uint64_t> EulerianPath::compute() const {
+EulerianPath::EulerianPath(DeBruijnGraph& graph);
 
-    return path;
-}
-
+std::vector<uint64_t> compute();

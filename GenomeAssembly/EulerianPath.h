@@ -30,18 +30,42 @@ private:
     size_t edgeCount = 0;
 
     // Methods
+
+    /**
+     *
+     */
     void initializeAdjacency();
 
+    /**
+     *
+     * @return
+     */
     bool isEulerian() const;
 
+    /**
+     *
+     * @return
+     */
     uint64_t findStartNode() const;
 
+    /**
+     *
+     * @param startNode
+     * @return
+     */
     std::vector<uint64_t> runHierholzer(uint64_t startNode);
 
 public:
-
+    /**
+     *
+     * @param graph
+     */
     EulerianPath(DeBruijnGraph& graph);
 
+    /**
+     *
+     * @return
+     */
     std::vector<uint64_t> compute();
 };
 
