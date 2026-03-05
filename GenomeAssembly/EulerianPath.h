@@ -8,8 +8,8 @@
  * -
  */
 
-#ifndef M30EP_TEQUIGLE_EULERIANPATH_H
-#define M30EP_TEQUIGLE_EULERIANPATH_H
+#ifndef EULERIAN_PATH_ALGORITHM_H
+#define EULERIAN_PATH_ALGORITHM_H
 
 #include "GenomeAssembly/DeBruijnGraph.h"
 
@@ -17,57 +17,32 @@ class EulerianPath {
 
 private:
 
-    // Variables
+    // Graph reference
     DeBruijnGraph& graph;
+
+    // Resulting Eulerian path
     std::vector<uint64_t> path;
+
+    // Mutable adjacency list for traversal
     OpenAddressingTable<uint64_t, std::vector<uint64_t>> adjCopy;
 
-    // Methods
+    // Number of edges
+    size_t edgeCount = 0;
 
-    /**
-     *
-     * @return Returns a boolean
-     */
+    // Methods
     void initializeAdjacency();
 
-    /**
-     *
-     * @return Returns a boolean
-     */
     bool isEulerian() const;
 
-    /**
-     *
-     * @return The start node.
-     */
     uint64_t findStartNode() const;
 
-    /**
-     * @brief
-     * @return
-     */
-    void runHierholzer();
+    std::vector<uint64_t> runHierholzer(uint64_t startNode);
 
 public:
 
-    /**
-     * @brief
-     *
-     *
-     *
-     * @param graph The directed edge graph to be traversed through.
-     */
-    EulerianPath(DeBruijnGraph graph);
+    EulerianPath(DeBruijnGraph& graph);
 
-    /**
-     * @brief
-     *
-     *
-     *
-     * @return Returns the path
-     */
-    std::vector<uint64_t> compute() const;
-
+    std::vector<uint64_t> compute();
 };
 
-#endif //M30EP_TEQUIGLE_EULERIANPATH_H
+#endif //EULERIAN_PATH_ALGORITHM_H

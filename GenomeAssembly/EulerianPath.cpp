@@ -20,7 +20,6 @@ EulerianPath::EulerianPath(DeBruijnGraph graph)
 
 std::vector<uint64_t> EulerianPath::compute() const {
 
-
     return path;
 }
 
