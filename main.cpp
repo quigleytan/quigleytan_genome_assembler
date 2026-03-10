@@ -83,12 +83,15 @@ int main() {
     } catch (const DNASequenceException& e) {
         std::cout << "Input error: " << e.what() << "\n";
     }
-
+/*
     std::cout << "All nodes in db graph" << std::endl;
     std::vector<uint64_t> vec = dbGraph.getAllNodes();
     for (auto& node : vec) {
         std::cout << "Node: " << KmerEncoding::decode(node, k - 1) << "\n";
     }
+    */
+
+    dbGraph.printGraph();
     return 0;
 }
 

@@ -14,6 +14,7 @@
 #define DE_BRUIJN_GRAPH_H
 
 #include <cstdint>
+#include <iostream>
 #include <vector>
 #include "DataProcessing/OpenAddressingTable.h"
 
@@ -110,6 +111,7 @@ public:
      */
     [[nodiscard]] std::vector<NodeId> getAllNodes() const;
 
+    void printGraph() const;
 };
 
 #endif //DE_BRUIJN_GRAPH_H

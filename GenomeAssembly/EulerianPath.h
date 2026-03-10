@@ -30,7 +30,7 @@ private:
 
     // helper functions
     void initializeAdjacency();
-    [[nodiscard]] bool isEulerian() const;
+
     [[nodiscard]] uint64_t findStartNode() const;
 
 public:
