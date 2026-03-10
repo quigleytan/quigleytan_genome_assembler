@@ -91,7 +91,7 @@ public:
     [[nodiscard]] const NodeData *findNode(NodeId queriedNode) const;
 
     /**
-     * @brief
+     * @brief Adds the requested kmer to the graph.
      *
      * Adds both the prefix and suffix of inputKmer to the table and adds the suffix to
      * the prefix's list of neighbors (individual adjacency list).
@@ -99,6 +99,16 @@ public:
      * @param inputKmer The kmer whose derived k-1mers will be added to the table.
      */
     void addKmer(NodeId inputKmer);
+
+    /**
+     * @brief Returns set of all k-1 nodes.
+     *
+     * Iterates through the graph and adds each node's key (encoded base as an uint_64) found
+     * to a list of nodes.
+     *
+     * @return Vector of all nodes in the graph (size k-1).
+     */
+    [[nodiscard]] std::vector<NodeId> getAllNodes() const;
 
 };
 

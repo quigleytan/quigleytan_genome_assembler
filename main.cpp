@@ -23,7 +23,7 @@ DNASequence getSequenceFromUser(std::string message, int sizeLimit);
 
 int main() {
 
-    std::ifstream file("../Data/genome_small_test.fna");
+    std::ifstream file("../Data/small_test.fna");
 
     auto genomeOpt = SequenceReader::readFasta(file);
 
@@ -82,6 +82,12 @@ int main() {
         std::cout << "Graph lookup error: " << e.what() << "\n";
     } catch (const DNASequenceException& e) {
         std::cout << "Input error: " << e.what() << "\n";
+    }
+
+    std::cout << "All nodes in db graph" << std::endl;
+    std::vector<uint64_t> vec = dbGraph.getAllNodes();
+    for (auto& node : vec) {
+        std::cout << "Node: " << KmerEncoding::decode(node, k - 1) << "\n";
     }
     return 0;
 }

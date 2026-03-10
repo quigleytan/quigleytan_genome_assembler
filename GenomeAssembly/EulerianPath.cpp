@@ -12,7 +12,7 @@ void EulerianPath::initializeAdjacency() {
 
 // Public
 
-EulerianPath::EulerianPath(DeBruijnGraph& g) {
+EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g) {
 
 }
 

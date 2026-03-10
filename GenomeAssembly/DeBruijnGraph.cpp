@@ -43,3 +43,14 @@ void DeBruijnGraph::addKmer(uint64_t inputKmer) {
     to.incrementInDegree();
     edgeCount_++;
 }
+
+std::vector<DeBruijnGraph::NodeId> DeBruijnGraph::getAllNodes() const {
+    // Initializes the return vector.
+    std::vector<NodeId> nodes;
+    nodes.reserve(nodeCount_);
+    // Populates the vector with all the item keys.
+    for (auto it = table_.begin(); it != table_.end(); ++it) {
+        nodes.push_back((*it).key);
+    }
+    return nodes;
+}

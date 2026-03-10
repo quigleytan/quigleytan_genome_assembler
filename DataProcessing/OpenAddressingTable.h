@@ -104,7 +104,7 @@ public:
 
     class iterator {
     private:
-        OpenAddressingTable* table;
+        const OpenAddressingTable* table;
         size_t index;
 
         /**
@@ -123,7 +123,7 @@ public:
          * @param inputTable Input table to be iterated through.
          * @param inputIndex The index to start iteration at.
          */
-        iterator(OpenAddressingTable* inputTable, size_t inputIndex)
+        iterator(const OpenAddressingTable* inputTable, size_t inputIndex)
             : table(inputTable), index(inputIndex) {
             advanceToNextValid();
         }
@@ -154,7 +154,7 @@ public:
          * @brief Used to access a specific item in the table based on the class index.
          * @return Returns a reference to an item.
          */
-        Item& operator*() {
+        const Item& operator*() const {
             return table->items[index];
         }
     };
@@ -163,7 +163,7 @@ public:
      * @brief
      * @return
      */
-    iterator begin() {
+    iterator begin() const {
         return iterator(this, 0);
     }
 
@@ -171,7 +171,7 @@ public:
      * @brief
      * @return Returns an iterator object.
      */
-    iterator end() {
+    iterator end() const {
         return iterator(this, items.size());
     }
 
@@ -208,20 +208,20 @@ public:
      * Inserts an item into the table using a linear probing strategy to resolve collisions.
      * If the key already exists, the onDuplicate method is called to handle the duplicate key scenario.
      *
-     * @param key
+     * @param insertKey
      * @return Value& Reference to the value associated with the inserted key.
      */
-    virtual std::pair<Value&, bool> insert(const Key& key) {
+    virtual std::pair<Value&, bool> insert(const Key& insertKey) {
 
         // Makes sure references are correct after rehashing
         if (numItems + 1 > items.size()/2) {
             rehash();
         }
 
-        size_t index = hashKey(key);
+        size_t index = hashKey(insertKey);
         size_t i = 0;
 
-        while (items[index].status == TAKEN && items[index].key != key) {
+        while (items[index].status == TAKEN && items[index].key != insertKey) {
             i++;
             index = (index + i) % items.size(); // linear probing
         }
@@ -231,7 +231,7 @@ public:
             onDuplicate(items[index].value);
             return {items[index].value, false};
         }
-        items[index].key = key;
+        items[index].key = insertKey;
         items[index].value = Value{}; // default construct
         items[index].status = TAKEN;
         ++numItems;
@@ -247,14 +247,14 @@ public:
      * Performs a lookup using the same probing strategy as insertion (linear probing)
      * starting from the hashed index of the key.
      *
-     * @param key Key to search for.
+     * @param searchKey Key to search for.
      * @return Pointer to the value associated with key if found; otherwise nullptr.
      */
-    virtual const Value* find(const Key& key) const {
-        size_t index = hashKey(key);
+    virtual const Value* find(const Key& searchKey) const {
+        size_t index = hashKey(searchKey);
         size_t i = 0;
         while (items[index].status != EMPTY) {
-            if (items[index].status == TAKEN && items[index].key == key)
+            if (items[index].status == TAKEN && items[index].key == searchKey)
                 return &items[index].value;
             i++;
             index = (index + i) % items.size();
