@@ -58,7 +58,6 @@ std::vector<DeBruijnGraph::NodeId> DeBruijnGraph::getAllNodes() const {
 void DeBruijnGraph::printGraph() const {
     std::cout << "De Bruijn Graph\n";
     std::cout << "--------------------------------------\n";
-
     auto nodes = getAllNodes();
 
     for (NodeId node : nodes) {
