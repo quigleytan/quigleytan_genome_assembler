@@ -41,7 +41,7 @@ void EulerianPath::initializeAdjacency() {
     return startNode; // Returns a valid node in both cycle and path.
 }
 
-// Public
+// Public methods
 
 EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g) {
 
