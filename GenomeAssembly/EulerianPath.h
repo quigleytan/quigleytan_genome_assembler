@@ -1,72 +1,47 @@
 /*
  * EulerianPath.h
  * Summary:
- * - Implementation of Hierholzer’s Algorithm
+ * - Implementation of modified Hierholzer’s Algorithm
  * Features:
  * -
  * Additional:
  * -
  */
 
-#ifndef EULERIAN_PATH_ALGORITHM_H
-#define EULERIAN_PATH_ALGORITHM_H
+#ifndef EULERIAN_PATH_H
+#define EULERIAN_PATH_H
 
+#include <vector>
 #include "GenomeAssembly/DeBruijnGraph.h"
+
+using NodeId = uint64_t;
 
 class EulerianPath {
 
 private:
 
-    // Graph reference
     DeBruijnGraph& graph;
 
-    // Resulting Eulerian path
+    // copy of adjacency list so edges can be consumed
+    OpenAddressingTable<NodeId, std::vector<NodeId>> adjCopy;
+
+    // final path
     std::vector<uint64_t> path;
 
-    // Mutable adjacency list for traversal
-    OpenAddressingTable<uint64_t, std::vector<uint64_t>> adjCopy;
-
-    // Number of edges
-    size_t edgeCount = 0;
-
-    // Methods
-
-    /**
-     *
-     */
+    // helper functions
     void initializeAdjacency();
-
-    /**
-     *
-     * @return
-     */
-    bool isEulerian() const;
-
-    /**
-     *
-     * @return
-     */
-    uint64_t findStartNode() const;
-
-    /**
-     *
-     * @param startNode
-     * @return
-     */
-    std::vector<uint64_t> runHierholzer(uint64_t startNode);
+    [[nodiscard]] bool isEulerian() const;
+    [[nodiscard]] uint64_t findStartNode() const;
 
 public:
-    /**
-     *
-     * @param graph
-     */
-    EulerianPath(DeBruijnGraph& graph);
 
-    /**
-     *
-     * @return
-     */
-    std::vector<uint64_t> compute();
+    EulerianPath(DeBruijnGraph& g);
+
+    void computePath();
+
+    [[nodiscard]] const std::vector<uint64_t>& getPath() const;
+
+    [[nodiscard]] std::string reconstructGenome() const;
 };
 
-#endif //EULERIAN_PATH_ALGORITHM_H
+#endif
