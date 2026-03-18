@@ -49,6 +49,33 @@ EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g) {
 
 void EulerianPath::computePath() {
 
+    path.clear();
+    initializeAdjacency();
+
+    std::stack<NodeId> stack;
+
+    NodeId start = findStartNode();
+    stack.push(start);
+
+    // Main loop
+    while (!stack.empty()) {
+
+        // Accesses the current node and gets it's neighbors
+        NodeId currentID = stack.top();
+        auto* neighbors = adjCopy.find(currentID);
+
+        // Checks if the current node has neighbors, then takes an edge and moves to the next node.
+        if (!neighbors->empty()) {
+            NodeId next = neighbors->back();
+            neighbors->pop_back();   // Deletes the edge immediately.
+            stack.push(next);
+        } else { // Backtracks to the last node and adds the node to the path.
+            path.push_back(currentID);
+            stack.pop();
+        }
+    }
+
+    std::reverse(path.begin(), path.end());
 }
 
 [[nodiscard]] const std::vector<uint64_t>& EulerianPath::getPath() const {

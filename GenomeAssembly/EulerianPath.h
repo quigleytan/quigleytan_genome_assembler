@@ -1,7 +1,7 @@
 /*
  * EulerianPath.h
  * Summary:
- * - Implementation of modified Hierholzer’s Algorithm
+ * - Implementation of modified Hierholzer's Algorithm
  * Features:
  * -
  * Additional:
@@ -12,6 +12,7 @@
 #define EULERIAN_PATH_H
 
 #include <vector>
+#include <stack>
 #include "GenomeAssembly/DeBruijnGraph.h"
 
 using NodeId = uint64_t;
@@ -22,7 +23,7 @@ private:
 
     DeBruijnGraph& graph;
 
-    // copy of adjacency list so edges can be consumed
+    // copy of the adjacency list so edges can be consumed
     OpenAddressingTable<NodeId, std::vector<NodeId>> adjCopy;
 
     // final path
@@ -37,6 +38,14 @@ public:
 
     EulerianPath(DeBruijnGraph& g);
 
+    /**
+     * @breif Computes an Eulerian Path using Hierholzer's algorithm
+     *
+     * Sets the result of the Eulerian path search to the class member path. Conducts a walk through the
+     * de Bruijn graph and uses each edge exactly once. Uses preloaded table of neighbor lists when accessing
+     * each node.
+     *
+     */
     void computePath();
 
     [[nodiscard]] const std::vector<uint64_t>& getPath() const;

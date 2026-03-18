@@ -244,6 +244,7 @@ public:
     /**
      * @brief Searches the hash table for an entry with the specified key.
      *
+     * CONST METHOD: Does not allow mutation of pointer information.
      * Performs a lookup using the same probing strategy as insertion (linear probing)
      * starting from the hashed index of the key.
      *
@@ -251,6 +252,28 @@ public:
      * @return Pointer to the value associated with key if found; otherwise nullptr.
      */
     virtual const Value* find(const Key& searchKey) const {
+        size_t index = hashKey(searchKey);
+        size_t i = 0;
+        while (items[index].status != EMPTY) {
+            if (items[index].status == TAKEN && items[index].key == searchKey)
+                return &items[index].value;
+            i++;
+            index = (index + i) % items.size();
+        }
+        return nullptr;
+    }
+
+    /**
+     * @brief Searches the hash table for an entry with the specified key.
+     *
+     * NON-CONST OVERRIDE METHOD: Context dependent, allows for value mutation.
+     * Performs a lookup using the same probing strategy as insertion (linear probing)
+     * starting from the hashed index of the key.
+     *
+     * @param searchKey Key to search for.
+     * @return Pointer to the value associated with key if found; otherwise nullptr.
+     */
+    virtual Value* find(const Key& searchKey) {
         size_t index = hashKey(searchKey);
         size_t i = 0;
         while (items[index].status != EMPTY) {
