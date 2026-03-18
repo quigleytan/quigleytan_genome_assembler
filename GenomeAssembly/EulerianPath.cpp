@@ -79,7 +79,7 @@ void EulerianPath::computePath() {
 }
 
 [[nodiscard]] const std::vector<uint64_t>& EulerianPath::getPath() const {
-
+    return path;
 }
 
 [[nodiscard]] std::string EulerianPath::reconstructGenome() const {
