@@ -57,10 +57,10 @@ void EulerianPath::computePath() {
     NodeId start = findStartNode();
     stack.push(start);
 
-    // Main loop
+    // Main traversal loop.
     while (!stack.empty()) {
 
-        // Accesses the current node and gets it's neighbors
+        // Accesses the current node and retrieve its remaining unused edges.
         NodeId currentID = stack.top();
         auto* neighbors = adjCopy.find(currentID);
 
@@ -69,7 +69,7 @@ void EulerianPath::computePath() {
             NodeId next = neighbors->back();
             neighbors->pop_back();   // Deletes the edge immediately.
             stack.push(next);
-        } else { // Backtracks to the last node and adds the node to the path.
+        } else { // If no edges remain, adds the node to the path and backtrack.
             path.push_back(currentID);
             stack.pop();
         }
