@@ -15,6 +15,7 @@
 #include <stack>
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "DataProcessing/OpenAddressingTable.h"
+#include "DataProcessing/KmerEncoding.h"
 
 using NodeId = uint64_t;
 

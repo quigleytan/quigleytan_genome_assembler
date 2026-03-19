@@ -10,11 +10,15 @@ std::pair<uint64_t, uint64_t> DeBruijnGraph::chop(uint64_t kmer) const {
 }
 
 // Constructor
-DeBruijnGraph::DeBruijnGraph(size_t k)
-    : k(KmerEncoding::validateK(k)),
-      kMask_(KmerEncoding::bitmask(k - 1)) {} // Bitmasks with k-1 for proper k-1 mer sizing.
-
+DeBruijnGraph::DeBruijnGraph(size_t k, size_t expectedNodes)
+    : k_(KmerEncoding::validateK(k)),
+      kMask_(KmerEncoding::bitmask(k_ - 1)),
+      table_(expectedNodes * 2) {}
 // Getters
+
+size_t DeBruijnGraph::getK() const {
+    return k_;
+}
 
 size_t DeBruijnGraph::getNodeCount() const {
     return nodeCount_;
@@ -62,7 +66,7 @@ void DeBruijnGraph::printGraph() const {
 
     for (NodeId node : nodes) {
 
-        std::cout << KmerEncoding::decode(node, k - 1)
+        std::cout << KmerEncoding::decode(node, k_ - 1)
                   << " | in: " << findNode(node)->getInDegree()
                   << " | out: " << findNode(node)->getOutDegree()
                   << " | -> ";
@@ -70,7 +74,7 @@ void DeBruijnGraph::printGraph() const {
         auto neighbors = findNode(node)->getNeighbors();
 
         for (NodeId neighbor : neighbors) {
-            std::cout << KmerEncoding::decode(neighbor, k - 1) << " ";
+            std::cout << KmerEncoding::decode(neighbor, k_ - 1) << " ";
         }
 
         std::cout << "\n";

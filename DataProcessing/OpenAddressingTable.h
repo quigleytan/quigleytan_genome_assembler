@@ -30,7 +30,7 @@ protected:
     };
 
     // Variables
-    unsigned long numItems; // Number of items in the table
+    size_t numItems; // Number of items in the table
     std::vector<Item> items;
 
     /**
@@ -89,7 +89,7 @@ protected:
      * @param n Starting integer to find the next prime
      * @return Next prime number
      */
-    static int nextPrime(int n) {
+    static size_t nextPrime(size_t n) {
         auto isPrime = [](int x) {
             if (x < 2) return false;
             for (int i = 2; i*i <= x; ++i)
@@ -103,77 +103,77 @@ protected:
 public:
 
     class iterator {
-    private:
-        const OpenAddressingTable* table;
-        size_t index;
+        private:
+            const OpenAddressingTable* table;
+            size_t index;
 
-        /**
-         * @brief Advances through the vector until the next item is found.
-         */
-        void advanceToNextValid() {
-            while (index < table->items.size() &&
-                   table->items[index].status != TAKEN) {
-                ++index;
+            /**
+             * @brief Advances through the vector until the next item is found.
+             */
+            void advanceToNextValid() {
+                while (index < table->items.size() &&
+                       table->items[index].status != TAKEN) {
+                    ++index;
+                }
             }
-        }
 
-    public:
-        /**
-         * @brief Constructor for an iterator that allows for simple and complete scanning of the table.
-         * @param inputTable Input table to be iterated through.
-         * @param inputIndex The index to start iteration at.
-         */
-        iterator(const OpenAddressingTable* inputTable, size_t inputIndex)
-            : table(inputTable), index(inputIndex) {
-            advanceToNextValid();
-        }
+        public:
+            /**
+             * @brief Constructor for an iterator that allows for simple and complete scanning of the table.
+             * @param inputTable Input table to be iterated through.
+             * @param inputIndex The index to start iteration at.
+             */
+            iterator(const OpenAddressingTable* inputTable, size_t inputIndex)
+                : table(inputTable), index(inputIndex) {
+                advanceToNextValid();
+            }
+
+            /**
+             * @brief Overload the ++ operator to advance through the vector.
+             *
+             * Skips empty items, returns a pointer to the next occupied item.
+             *
+             * @return
+             */
+            iterator& operator++() {
+                ++index;
+                advanceToNextValid();
+                return *this;
+            }
+
+            /**
+             * @brief Used in while loops to terminate once the whole table is accessed.
+             * @param other The other integer being compared.
+             * @return Returns a boolean, true if they are not equal.
+             */
+            bool operator!=(const iterator& other) const {
+                return index != other.index;
+            }
+
+            /**
+             * @brief Used to access a specific item in the table based on the class index.
+             * @return Returns a reference to an item.
+             */
+            const Item& operator*() const {
+                return table->items[index];
+            }
+        };
 
         /**
-         * @brief Overload the ++ operator to advance through the vector.
-         *
-         * Skips empty items, returns a pointer to the next occupied item.
-         *
+         * @brief
          * @return
          */
-        iterator& operator++() {
-            ++index;
-            advanceToNextValid();
-            return *this;
+        iterator begin() const {
+            return iterator(this, 0);
         }
 
         /**
-         * @brief Used in while loops to terminate once the whole table is accessed.
-         * @param other The other integer being compared.
-         * @return Returns a boolean, true if they are not equal.
+         * @brief
+         * @return Returns an iterator object.
          */
-        bool operator!=(const iterator& other) const {
-            return index != other.index;
+        iterator end() const {
+            return iterator(this, items.size());
         }
-
-        /**
-         * @brief Used to access a specific item in the table based on the class index.
-         * @return Returns a reference to an item.
-         */
-        const Item& operator*() const {
-            return table->items[index];
-        }
-    };
-
-    /**
-     * @brief
-     * @return
-     */
-    iterator begin() const {
-        return iterator(this, 0);
-    }
-
-    /**
-     * @brief
-     * @return Returns an iterator object.
-     */
-    iterator end() const {
-        return iterator(this, items.size());
-    }
 
     // OPEN ADDRESSING TABLE METHODS
     virtual ~OpenAddressingTable() = default;
@@ -187,7 +187,7 @@ public:
      *
      * @param initialSize initial size for construction of the hash table.
      */
-    OpenAddressingTable(int initialSize = 101) {
+    OpenAddressingTable(size_t initialSize = 101) {
         items.resize(nextPrime(initialSize));
         numItems = 0;
     }

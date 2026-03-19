@@ -3,95 +3,78 @@
 //
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "CustomExceptions/DNASequenceException.h"
-#include "CustomExceptions/NodeNotFoundException.h"
 
 #include "DataInitialization/DNASequence.h"
 #include "DataInitialization/SequenceReader.h"
 
 #include "DataProcessing/KmerEncoding.h"
-#include "DataProcessing//KmerTable.h"
+#include "DataProcessing/KmerTable.h"
 
 #include "GenomeAssembly/DeBruijnGraph.h"
+#include "GenomeAssembly/EulerianPath.h"
 
-
-// Functions
+// Function declarations
 int getIntFromUser();
-
-DNASequence getSequenceFromUser(std::string message, int sizeLimit);
+bool isRotation(const std::string& original, const std::string& assembled);
 
 int main() {
 
-    std::ifstream file("../Data/small_test.fna");
+    std::ifstream file("../Data/genome_sample_ecoli.fna");
+    //std::ifstream file("../Data/small_test.fna");
+    //std::ifstream file("../Data/genome_small_test.fna");
 
     auto genomeOpt = SequenceReader::readFasta(file);
-
     DNASequence genome = *genomeOpt;
-
-    std::cout << genome.getName() << std::endl;
     file.close();
 
+    std::cout << genome.getName() << "\n";
+    std::cout << "Sequence length: " << genome.getLength() << " bases\n";
+
     int k = getIntFromUser();
-    // Encoding sequence into k-mer table
-    KmerTable kTable(genome.getLength(), k);
-    KmerEncoding::encodeSequence(genome.getSequence(), k, kTable);
 
-    // Getting k-mer from user to check count
-    std::string kmer = getSequenceFromUser("Enter a k-mer sequence to check its count in the provided DNA sequence:", k).getSequence();
+    // Circularize the sequence by appending the first k-1 bases to close the genome loop
+    std::string circularSequence = genome.getSequence() + genome.getSequence().substr(0, k - 1);
 
-    const size_t* p = kTable.find(KmerEncoding::encode(kmer));
-    size_t count = p ? *p : 0;
-    std::cout << "Found: " << count << " instances of " << kmer << std::endl;
+    // Encode circular sequence into k-mer table
+    KmerTable kTable(circularSequence.length(), k);
+    KmerEncoding::encodeSequence(circularSequence, k, kTable);
+    std::cout << "Unique k-mers:   " << kTable.getNumItems() << "\n";
 
-    DeBruijnGraph dbGraph(k);
-
+    // Build De Bruijn graph, pre-sized to avoid rehashing
+    DeBruijnGraph dbGraph(k, kTable.getNumItems() * 2);
     for (const auto& entry : kTable) {
-        uint64_t graphKmer = entry.key;
-        size_t count = entry.value;
-
-        for (size_t i = 0; i < count; ++i)
-            dbGraph.addKmer(graphKmer);
+        for (size_t i = 0; i < entry.value; ++i)
+            dbGraph.addKmer(entry.key);
     }
+    std::cout << "Graph built:     " << dbGraph.getNodeCount() << " nodes, "
+              << dbGraph.getEdgeCount() << " edges\n";
 
-    // Asks user for a k-1 (node) to check its carried information and neighbors
+    // Eulerian path and genome reconstruction
+    EulerianPath eulerianPath(dbGraph);
     try {
-        std::string nodeStr =
-            getSequenceFromUser("Enter a (k-1)-mer node to inspect in the De Bruijn graph:", k - 1).getSequence();
+        eulerianPath.computePath();
 
-        uint64_t node = KmerEncoding::encode(nodeStr);
+        // Trim k-1 bases added by circularization
+        std::string assembled = eulerianPath.reconstructGenome();
+        if (assembled.length() > genome.getLength())
+            assembled = assembled.substr(0, genome.getLength());
 
-        std::cout << "Node: " << nodeStr << "\n";
-        std::cout << "Encoded: " << node << "\n";
+        bool match    = assembled == genome.getSequence();
+        bool rotation = !match && isRotation(genome.getSequence(), assembled);
 
-        auto foundNode = dbGraph.findNode(node);
+        std::cout << "Path length:      " << eulerianPath.getPath().size() << " nodes\n";
+        std::cout << "Assembled length: " << assembled.length() << " bases\n";
+        std::cout << "Reconstruction:   " << (match ? "YES" : rotation ? "YES (rotation)" : "NO") << "\n";
 
-        if (!foundNode) {
-            std::cout << "Node not found in graph.\n";
-        } else {
-            size_t inDeg  = foundNode->getInDegree();
-            size_t outDeg = foundNode->getOutDegree();
-
-            std::cout << "In-degree:  " << inDeg << "\n";
-            std::cout << "Out-degree: " << outDeg << "\n";
-            std::cout << "Neighbors (encoded): ";
-            for (uint64_t n : foundNode->getNeighbors()) std::cout << KmerEncoding::decode(n, k - 1) << " ";
-            std::cout << "\n";
-        }
-    } catch (const NodeNotFoundException& e) {
-        std::cout << "Graph lookup error: " << e.what() << "\n";
-    } catch (const DNASequenceException& e) {
-        std::cout << "Input error: " << e.what() << "\n";
+        std::cout << "--------------------------------------\n";
+        /*std::cout << "Original: " << genome.getSequence() << "\n";
+        std::cout << "Assembled: " << assembled << "\n";*/
+    } catch (const std::runtime_error& e) {
+        std::cout << "Eulerian path error: " << e.what() << "\n";
     }
-/*
-    std::cout << "All nodes in db graph" << std::endl;
-    std::vector<uint64_t> vec = dbGraph.getAllNodes();
-    for (auto& node : vec) {
-        std::cout << "Node: " << KmerEncoding::decode(node, k - 1) << "\n";
-    }
-    */
-
-    dbGraph.printGraph();
     return 0;
 }
 
@@ -114,22 +97,36 @@ int getIntFromUser() {
     }
 }
 
-DNASequence getSequenceFromUser(std::string message, int sizeLimit) {
-    std::cout << message << std::endl;
-    while (true) {
-        std::string input;
-        std::getline(std::cin, input);
-        if (input.length() != sizeLimit && sizeLimit)  {
-            std::cout << "Kmer size is not equal to k, please try again." << std::endl;
-            continue;
-        }
-        try {
-            DNASequence sequence("User DNA sequence",input);
-            std::cout << "You entered: " << input << std::endl;
-            return sequence;   // exit function once valid
-        } catch (const DNASequenceException& exception) {
-            std::cout << "DNA Sequence Error: " << exception.what() << std::endl;
-            std::cout << message << std::endl;
+bool isRotation(const std::string& original, const std::string& assembled) {
+    if (original.length() != assembled.length()) return false;
+    if (original == assembled) return true;
+
+    size_t n = original.length();
+    std::string doubled = original + original;
+
+    // Build failure function over assembled (pattern)
+    std::vector<size_t> fail(n, 0);
+    size_t len = 0;
+    size_t i = 1;
+    while (i < n) {
+        if (assembled[i] == assembled[len]) {
+            fail[i++] = ++len;
+        } else if (len != 0) {
+            len = fail[len - 1];
+        } else {
+            fail[i++] = 0;
         }
     }
+
+    // KMP search for assembled inside doubled
+    size_t j = 0;
+    for (size_t k = 0; k < doubled.length(); ++k) {
+        while (j > 0 && doubled[k] != assembled[j])
+            j = fail[j - 1];
+        if (doubled[k] == assembled[j])
+            ++j;
+        if (j == n)
+            return true;
+    }
+    return false;
 }

@@ -23,7 +23,7 @@ class DeBruijnGraph {
 private:
 
     // Variables
-    const size_t k;
+    const size_t k_;
     const uint64_t kMask_;
 
     size_t nodeCount_ = 0;
@@ -69,8 +69,15 @@ public:
      * All kmers to be added to the graph MUST BE ENCODED prior to insertion.
      *
      * @param k The k size for the graph: k must be > 1.
+     * @param initialSize Default at 101, used to pre-size the table to reduce rehash collisions.
      */
-    explicit DeBruijnGraph(size_t k);
+    explicit DeBruijnGraph(size_t k, size_t initialSize = 101);
+
+    /**
+     * @brief Returns the size of K-mers in the graph.
+     * @return k_ The k size for the graph.
+     */
+    [[nodiscard]] size_t getK() const;
 
     /**
      * @brief Returns the total node counts in the graph.

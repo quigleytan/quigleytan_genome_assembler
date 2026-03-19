@@ -3,7 +3,15 @@
 #include <algorithm>
 
 void EulerianPath::initializeAdjacency() {
+    for (NodeId node : graph.getAllNodes()) {
+        const auto* data = graph.findNode(node);
 
+        auto [neighborRef, isNew] = adjCopy.insert(node);
+        neighborRef = data->getNeighbors();
+
+        // Sort neighbors for deterministic traversal order
+        std::sort(neighborRef.begin(), neighborRef.end());
+    }
 }
 
 uint64_t EulerianPath::findStartNode() const {
@@ -19,17 +27,14 @@ uint64_t EulerianPath::findStartNode() const {
 
         const auto* data = graph.findNode(node);
 
-        int diff = static_cast<int>(data->getOutDegree()) -
-                   static_cast<int>(data->getInDegree());
+        int diff = static_cast<int>(data->getOutDegree()) - static_cast<int>(data->getInDegree());
 
         if (diff == 1) {
             startNode = node;
             startCount++;
-        }
-        else if (diff == -1) {
+        } else if (diff == -1) {
             endCount++;
-        }
-        else if (diff != 0) {
+        } else if (diff != 0) {
             throw std::runtime_error("Graph is not Eulerian");
         }
     }
@@ -43,9 +48,7 @@ uint64_t EulerianPath::findStartNode() const {
 
 // Public methods
 
-EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g) {
-
-}
+EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g) {}
 
 void EulerianPath::computePath() {
 
@@ -83,5 +86,19 @@ const std::vector<uint64_t>& EulerianPath::getPath() const {
 }
 
 std::string EulerianPath::reconstructGenome() const {
+    if (path.empty())
+        throw std::runtime_error("Path is empty — call computePath() first");
 
+    const size_t nodeLen = graph.getK() - 1;
+
+    std::string genome = KmerEncoding::decode(path.front(), nodeLen);
+
+    // For a circuit, path.back() == path.front(), so exclude the last node
+    size_t end = (path.front() == path.back()) ? path.size() - 1 : path.size();
+
+    for (size_t i = 1; i < end; ++i) {
+        genome += KmerEncoding::decode(path[i], nodeLen).back();
+    }
+
+    return genome;
 }
