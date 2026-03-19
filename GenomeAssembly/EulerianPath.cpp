@@ -83,4 +83,5 @@ void EulerianPath::computePath() {
 }
 
 [[nodiscard]] std::string EulerianPath::reconstructGenome() const {
+
 }

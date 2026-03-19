@@ -55,23 +55,24 @@ bool DebruijnGraphTests() {
     }
 
     // Checking AG node logic
-    if (graph.getInDegree(KmerEncoding::encode("AG")) != 1) {
+    // Checking AG node logic
+    if (graph.findNode(KmerEncoding::encode("AG"))->getInDegree() != 1) {
         passed = false;
         std::cout << "AG In degree incorrect" << std::endl;
     }
 
-    if (graph.getOutDegree(KmerEncoding::encode("AG")) != 2) {
+    if (graph.findNode(KmerEncoding::encode("AG"))->getOutDegree() != 2) {
         passed = false;
         std::cout << "AG Out degree incorrect" << std::endl;
     }
 
     // Checking GT node logic
-    if (graph.getInDegree(KmerEncoding::encode("GT")) != 3) {
+    if (graph.findNode(KmerEncoding::encode("GT"))->getInDegree() != 3) {
         passed = false;
         std::cout << "GT In degree incorrect" << std::endl;
     }
 
-    if (graph.getOutDegree(KmerEncoding::encode("GT")) != 2) {
+    if (graph.findNode(KmerEncoding::encode("GT"))->getOutDegree() != 2) {
         passed = false;
         std::cout << "GT Out degree incorrect" << std::endl;
     }
@@ -84,10 +85,11 @@ bool DebruijnGraphTests() {
     };
 
     for (uint64_t node : remainingNodes) {
-        if (graph.getInDegree(node) != 1 || graph.getOutDegree(node) != 1) {
+        if (graph.findNode(node)->getInDegree() != 1 ||
+            graph.findNode(node)->getOutDegree() != 1) {
             passed = false;
             std::cout << "Node " << node << " has incorrect in/out degree" << std::endl;
-        }
+            }
     }
 
     return passed;
