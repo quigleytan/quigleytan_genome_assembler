@@ -1,13 +1,6 @@
 #include "DNASequence.h"
 #include "../CustomExceptions/DNASequenceException.h"
 
-// Struct to allow for easier return of data
-struct AnalysisResult {
-    std::string complement;       // Complement sequence
-    int gcTotal;                  // Number of G/C bases
-    double gcPercent;             // Percentage of G/C
-};
-
 // USED ONLY IN CONSTRUCTOR
 DNASequence::AnalysisResult DNASequence::analyzeSequence(const std::string& inputSequence) {
     // Ensures no empty sequences are added

@@ -6,7 +6,7 @@ void EulerianPath::initializeAdjacency() {
 
 }
 
-[[nodiscard]] uint64_t EulerianPath::findStartNode() const {
+uint64_t EulerianPath::findStartNode() const {
 
     auto nodes = graph.getAllNodes();
 
@@ -78,10 +78,10 @@ void EulerianPath::computePath() {
     std::reverse(path.begin(), path.end());
 }
 
-[[nodiscard]] const std::vector<uint64_t>& EulerianPath::getPath() const {
+const std::vector<uint64_t>& EulerianPath::getPath() const {
     return path;
 }
 
-[[nodiscard]] std::string EulerianPath::reconstructGenome() const {
+std::string EulerianPath::reconstructGenome() const {
 
 }

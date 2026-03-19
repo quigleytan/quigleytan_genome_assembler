@@ -23,7 +23,7 @@ class DeBruijnGraph {
 private:
 
     // Variables
-    const size_t k_;
+    const size_t k;
     const uint64_t kMask_;
 
     size_t nodeCount_ = 0;

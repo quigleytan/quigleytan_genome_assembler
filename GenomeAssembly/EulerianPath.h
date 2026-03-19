@@ -14,6 +14,7 @@
 #include <vector>
 #include <stack>
 #include "GenomeAssembly/DeBruijnGraph.h"
+#include "DataProcessing/OpenAddressingTable.h"
 
 using NodeId = uint64_t;
 
