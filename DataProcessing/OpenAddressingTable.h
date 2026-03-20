@@ -38,13 +38,15 @@ protected:
         if constexpr (std::is_same_v<Key, __uint128_t>) {
             uint64_t lo = static_cast<uint64_t>(key);
             uint64_t hi = static_cast<uint64_t>(key >> 64);
-            // FNV-inspired mix — both halves contribute even when one is zero
-            lo ^= lo >> 33;
-            lo *= 0xff51afd7ed558ccdULL;
+            // Mix each half independently first
+            hi ^= hi >> 33;
+            hi *= 0xff51afd7ed558ccdULL;
+            hi ^= hi >> 33;
             lo ^= lo >> 33;
             lo *= 0xc4ceb9fe1a85ec53ULL;
             lo ^= lo >> 33;
-            return (lo ^ hi) % items.size();
+            // Combine
+            return (lo ^ (hi * 0x9e3779b97f4a7c15ULL)) % items.size();
         } else {
             return std::hash<Key>{}(key) % items.size();
         }

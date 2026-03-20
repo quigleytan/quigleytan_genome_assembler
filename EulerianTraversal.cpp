@@ -16,7 +16,9 @@
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "GenomeAssembly/EulerianPath.h"
 
-// PRIVATE HELPER FUNCTIONS
+// -----------------------------------------------------------------------
+// Private helpers
+// -----------------------------------------------------------------------
 
 int getIntFromUser() {
     while (true) {
@@ -79,17 +81,9 @@ static std::vector<int> kmpSearch(const std::string& pat, const std::string& txt
     return res;
 }
 
-// Checks if assembled is a rotation of original by searching for
-// assembled as a pattern inside original+original.
-static bool isRotation(const std::string& original, const std::string& assembled) {
-    if (original.length() != assembled.length()) return false;
-    if (original == assembled) return true;
-
-    std::string doubled = original + original;
-    return !kmpSearch(assembled, doubled).empty();
-}
-
-// PIPELINE
+// -----------------------------------------------------------------------
+// Pipeline stages
+// -----------------------------------------------------------------------
 
 /**
  * @brief Stage 1 — Load a FASTA file into a DNASequence.
@@ -149,21 +143,41 @@ static DeBruijnGraph buildGraph(const std::string& sequence, int k) {
  *
  * Runs Hierholzer's algorithm on the graph, then reconstructs and trims
  * the assembled string back to the original sequence length.
- * Passes isCircuit=true since the graph was built from a circularized sequence.
  *
- * @param graph          The populated De Bruijn graph.
- * @param originalLength Length of the original (non-circularized) sequence.
- * @return               Assembled genome string trimmed to originalLength.
+ * Since the graph is built from a circularized sequence, the Eulerian path
+ * is a circuit and the start node is non-deterministic. To produce a
+ * consistent result, the assembled string is rotated to align with the
+ * original sequence using a KMP search for the first k bases of the original.
+ *
+ * @param graph            The populated De Bruijn graph.
+ * @param originalSequence The original (non-circularized) sequence string.
+ * @param k                K-mer size used to build the graph.
+ * @return                 Assembled genome string normalized to original start position.
  */
-static std::string assembleGenome(DeBruijnGraph& graph, size_t originalLength) {
+static std::string assembleGenome(DeBruijnGraph& graph,
+                                   const std::string& originalSequence,
+                                   int k) {
     EulerianPath eulerianPath(graph);
     eulerianPath.computePath();
 
     std::cout << "Path length:     " << eulerianPath.getPath().size() << " nodes\n";
 
     std::string assembled = eulerianPath.reconstructGenome(true);
-    if (assembled.length() > originalLength)
-        assembled = assembled.substr(0, originalLength);
+    if (assembled.length() > originalSequence.length())
+        assembled = assembled.substr(0, originalSequence.length());
+
+    // Normalize rotation: find where original's first k bases appear in
+    // assembled and rotate to that offset. This corrects for the non-
+    // deterministic circuit start without relying on isRotation().
+    std::string anchor = originalSequence.substr(0, k);
+    std::string doubled = assembled + assembled;
+    auto matches = kmpSearch(anchor, doubled);
+
+    if (!matches.empty()) {
+        size_t offset = static_cast<size_t>(matches.front());
+        assembled = assembled.substr(offset) +
+                    assembled.substr(0, offset);
+    }
 
     return assembled;
 }
@@ -171,46 +185,34 @@ static std::string assembleGenome(DeBruijnGraph& graph, size_t originalLength) {
 /**
  * @brief Stage 4 — Report assembly results to stdout.
  *
- * Compares the assembled string against the original sequence and
- * prints whether reconstruction succeeded, accepting an exact match
- * or a valid rotation (expected for circuits with non-deterministic start).
+ * Compares the assembled string against the original sequence with a
+ * simple exact match. Rotation normalization is handled in assembleGenome(),
+ * so no rotation check is needed here.
  *
  * @param original  The original DNASequence loaded from file.
  * @param assembled The assembled string produced by assembleGenome().
  */
 static void reportResults(const DNASequence& original, const std::string& assembled) {
-    bool match    = assembled == original.getSequence();
-    bool rotation = !match && isRotation(original.getSequence(), assembled);
+    bool match = assembled == original.getSequence();
 
-    std::cout << "Assembled length: " << assembled.length() << " bases\n";
-    std::cout << "Reconstruction:   "
-              << (match ? "YES" : rotation ? "YES (rotation)" : "NO") << "\n";
+    std::cout << "ASSEMBLED LENGTH: " << assembled.length() << " bases\n";
+    std::cout << "RECONSTRUCTION:   " << (match ? "SUCCESSFUL" : "FAILED") << "\n";
     std::cout << "--------------------------------------\n";
-    /*
-    std::cout << "Original:  " << original.getSequence() << "\n";
-    std::cout << "Assembled: " << assembled << "\n";
-    std::cout << "Lengths:   " << original.getLength() << " vs " << assembled.length() << "\n";
-    */
-    std::cout << "Original:  " << original.getSequence() << "\n";
-    std::cout << "Assembled: " << assembled << "\n";
-    std::cout << "Lengths:   " << original.getLength()
-              << " vs " << assembled.length() << "\n";
 }
 
-// MAIN PROGRAM
+// -----------------------------------------------------------------------
+// Main
+// -----------------------------------------------------------------------
 
 int main() {
 
     try {
-        //const std::string file = "../Data/genome_sample_ecoli.fna";
-        //const std::string file = "../Data/ASM2073604v1_Haemophilus_influenzae";
-        //const std::string file = "../Data/small_test.fna";
-        //const std::string file = "../Data/Saccharomyces cerevisiae S288C chromosome I.fna";
-        const std::string file = "../Data/Escherichia_phage_phiX174.fna";
-        //const std::string file = "../Data/Mycoplasma_genitalium_G37.fna";
+        //const std::string path = "../Data/genome_sample_ecoli.fna";
+        //const std::string path = "../Data/small_test.fna";
+        const std::string path = "../Data/Escherichia_phage_phiX174.fna";
 
         // Stage 1: Load
-        DNASequence genome = loadGenome(file);
+        DNASequence genome = loadGenome(path);
         std::cout << genome.getName() << "\n";
         std::cout << "Sequence length: " << genome.getLength() << " bases\n";
 
@@ -218,8 +220,8 @@ int main() {
         int k = getIntFromUser();
         DeBruijnGraph graph = buildGraph(genome.getSequence(), k);
 
-        // Stage 3: Assemble
-        std::string assembled = assembleGenome(graph, genome.getLength());
+        // Stage 3: Assemble — pass original sequence and k for rotation normalization
+        std::string assembled = assembleGenome(graph, genome.getSequence(), k);
 
         // Stage 4: Report
         reportResults(genome, assembled);
