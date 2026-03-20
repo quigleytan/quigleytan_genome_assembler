@@ -190,6 +190,11 @@ static void reportResults(const DNASequence& original, const std::string& assemb
     std::cout << "Reconstruction:   "
               << (match ? "YES" : rotation ? "YES (rotation)" : "NO") << "\n";
     std::cout << "--------------------------------------\n";
+    /*
+    std::cout << "Original:  " << original.getSequence() << "\n";
+    std::cout << "Assembled: " << assembled << "\n";
+    std::cout << "Lengths:   " << original.getLength() << " vs " << assembled.length() << "\n";
+    */
 }
 
 // -----------------------------------------------------------------------
@@ -199,12 +204,15 @@ static void reportResults(const DNASequence& original, const std::string& assemb
 int main() {
 
     try {
-        //const std::string path = "../Data/genome_sample_ecoli.fna";
-        const std::string path = "../Data/small_test.fna";
-        //const std::string path = "../Data/genome_small_test.fna";
+        //const std::string file = "../Data/genome_sample_ecoli.fna";
+        //const std::string file = "../Data/ASM2073604v1_Haemophilus_influenzae";
+        //const std::string file = "../Data/small_test.fna";
+        //const std::string file = "../Data/genome_small_test.fna";
+        const std::string file = "../Data/Escherichia_phage_phiX174.fna";
+        //const std::string file = "../Data/Mycoplasma_genitalium_G37.fna";
 
         // Stage 1: Load
-        DNASequence genome = loadGenome(path);
+        DNASequence genome = loadGenome(file);
         std::cout << genome.getName() << "\n";
         std::cout << "Sequence length: " << genome.getLength() << " bases\n";
 

@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "CustomExceptions/DNASequenceException.h"
 
-uint64_t KmerEncoding::encodeBase(char base) {
+NodeId KmerEncoding::encodeBase(char base) {
     // Assigning 2-bit values to each base
     switch (base) {
         case 'A': return 0b00;
@@ -15,7 +15,7 @@ uint64_t KmerEncoding::encodeBase(char base) {
 }
 
 // Rolls the previous k-mer to get the next one
-uint64_t KmerEncoding::roll(uint64_t prev, char next, size_t k) {
+NodeId KmerEncoding::roll(NodeId prev, char next, size_t k) {
     // Shift left to make space for the new base
     prev <<= 2;
     prev |= encodeBase(next);
@@ -25,19 +25,19 @@ uint64_t KmerEncoding::roll(uint64_t prev, char next, size_t k) {
 
 // Helper functions for proper k-value screening
 size_t KmerEncoding::validateK(size_t k) {
-    if (k < 2 || k > KmerEncoding::MAX_K_64)
+    if (k < 2 || k > MAX_K_128)
         throw std::invalid_argument(
             "k must be between 2 and 32 for 64-bit 2-bit encoding");
     return k;
 }
 
-uint64_t KmerEncoding::bitmask(size_t k) {
+__uint128_t KmerEncoding::bitmask(size_t k) {
     // Bitmask to keep last k bases (2 bits per base)
     return (1ULL << (2 * k)) - 1;
 }
 
 // START OF ENCODING SEQUENCE
-uint64_t KmerEncoding::encode(const std::string& kmer) {
+NodeId KmerEncoding::encode(const std::string& kmer) {
     uint64_t value = 0;
     for (char base : kmer) {
         value <<= 2; // Shift left to include the next base
@@ -46,11 +46,11 @@ uint64_t KmerEncoding::encode(const std::string& kmer) {
     return value;
 }
 
-std::string KmerEncoding::decode(uint64_t encoded, size_t k) {
+std::string KmerEncoding::decode(NodeId encoded, size_t k) {
     std::string result(k, 'A');
 
     for (size_t i = 0; i < k; ++i) {
-        uint64_t bits = encoded & 0b11;
+        __uint128_t bits = encoded & 0b11;
 
         switch (bits) {
             case 0b00: result[k - 1 - i] = 'A'; break;
@@ -67,7 +67,7 @@ void KmerEncoding::encodeSequence(const std::string &dna, size_t k, KmerTable &t
     if (dna.length() < k) return;
 
     // Encode first k-mer
-    uint64_t kmer = encode(dna.substr(0, k));
+    NodeId kmer = encode(dna.substr(0, k));
     table.insert(kmer);
 
     // Rolls through the rest of the sequence.

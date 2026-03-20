@@ -2,7 +2,7 @@
 #include "DataProcessing/KmerEncoding.h"
 
 // Private
-std::pair<uint64_t, uint64_t> DeBruijnGraph::chop(uint64_t kmer) const {
+std::pair<NodeId, NodeId> DeBruijnGraph::chop(NodeId kmer) const {
     uint64_t prefix = kmer >> 2; // Naturally discards
     uint64_t suffix = kmer & kMask_;
 
@@ -32,7 +32,7 @@ const DeBruijnGraph::NodeData *DeBruijnGraph::findNode(NodeId node) const{
     return table_.find(node);
 }
 
-void DeBruijnGraph::addKmer(uint64_t inputKmer) {
+void DeBruijnGraph::addKmer(NodeId inputKmer) {
     // Split k-mer into prefix and suffix (k-1)-mers
     auto [prefix, suffix] = chop(inputKmer);
 
@@ -48,7 +48,7 @@ void DeBruijnGraph::addKmer(uint64_t inputKmer) {
     edgeCount_++;
 }
 
-std::vector<DeBruijnGraph::NodeId> DeBruijnGraph::getAllNodes() const {
+std::vector<NodeId> DeBruijnGraph::getAllNodes() const {
     // Initializes the return vector.
     std::vector<NodeId> nodes;
     nodes.reserve(nodeCount_);

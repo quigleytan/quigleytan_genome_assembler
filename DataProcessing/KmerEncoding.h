@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <string>
 #include "KmerTable.h"
+#include "KmerTypes.h"
 
 class KmerEncoding {
 
@@ -28,7 +29,7 @@ private:
      * @param base Char input value of a single base.
      * @return 2-bit value as uint64_t.
      */
-    static uint64_t encodeBase(char base);
+    static NodeId encodeBase(char base);
 
     /**
      * @brief Rolls the previous k-mer to create the next k-mer by adding a new base.
@@ -42,11 +43,11 @@ private:
      *
      * @return 2-bit encoded next kmer as uint64_t.
      */
-    static uint64_t roll(uint64_t prev, char next, size_t k);
+    static NodeId roll(NodeId prev, char next, size_t k);
 
 public:
 
-    static constexpr size_t MAX_K_64 = 32;
+    static constexpr size_t MAX_K_128 = 64;
 
     /**
      * @brief Validates that k is a usable kmer size for the graph.
@@ -68,7 +69,7 @@ public:
      * @param k Set k-mer length.
      * @return Bitmask for k-mer of length k.
      */
-    static uint64_t bitmask(size_t k);
+    static __uint128_t bitmask(size_t k);
 
     /**
      * @brief Encodes a k-mer string into its 2-bit representation.
@@ -81,7 +82,7 @@ public:
      *
      * @return 2-bit encoded kmer as uint64_t.
      */
-    static uint64_t encode(const std::string& kmer);
+    static NodeId encode(const std::string& kmer);
 
     /**
      * @brief Decodes a 2-bit encoded k-mer into its string representation.
@@ -93,7 +94,7 @@ public:
      * @param k The length of the k-mer.
      * @return Equivalent string representation.
      */
-    static std::string decode(uint64_t kmer, size_t k);
+    static std::string decode(NodeId kmer, size_t k);
 
     /**
      * @brief Performs k-mer analysis on a DNA sequence and populates a KmerTable.
@@ -108,5 +109,4 @@ public:
     static void encodeSequence(const std::string& dna, size_t k, KmerTable& table);
 
 };
-
 #endif //KMER_ENCODER_H

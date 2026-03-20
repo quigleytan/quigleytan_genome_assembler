@@ -11,6 +11,7 @@ add_executable(M3OEP-tequigle
         GenomeAssembly/DeBruijnGraph.cpp
         GenomeAssembly/EulerianPath.h
         GenomeAssembly/EulerianPath.cpp
+        KmerTypes.h
 )
 
 add_executable(EulerianTraversal
@@ -21,6 +22,7 @@ add_executable(EulerianTraversal
         GenomeAssembly/DeBruijnGraph.cpp
         GenomeAssembly/EulerianPath.h
         GenomeAssembly/EulerianPath.cpp
+        KmerTypes.h
 )
 
 add_executable(InitializationTests
@@ -28,12 +30,14 @@ add_executable(InitializationTests
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
         DataProcessing/KmerEncoding.cpp
+        KmerTypes.h
 )
 
 add_executable(ProcessingTests
         DataProcessing/KmerEncoding.cpp
         DataProcessing/ProcessingTests.cpp
         DataInitialization/DNASequence.cpp
+        KmerTypes.h
 )
 
 add_executable(AssemblyTests
@@ -43,6 +47,7 @@ add_executable(AssemblyTests
         DataInitialization/DNASequence.cpp
         GenomeAssembly/EulerianPath.h
         GenomeAssembly/EulerianPath.cpp
+        KmerTypes.h
 )
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})

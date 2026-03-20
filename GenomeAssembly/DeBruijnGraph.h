@@ -5,7 +5,7 @@
  * - Representation of a De Bruijn graph to be used for Eulerian walks for genome assembly.
  * - Graph nodes are k-1 mers, transitions are represented as full kmers.
  * Important notes:
- * - IMPORTANT: All kmer and node lookups should already be encoded as an u_int64.
+ * - IMPORTANT: All kmer and node lookups should already be encoded as an __uint128_t.
  * - Graph stored in a linear probing, open addressing hash table, with an encoded k-1mer (NodeId) as the key and
  *   the struct NodeData in value.
  */
@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include "KmerTypes.h"
 #include "DataProcessing/OpenAddressingTable.h"
 
 class DeBruijnGraph {
@@ -24,25 +25,24 @@ private:
 
     // Variables
     const size_t k_;
-    const uint64_t kMask_;
+    const __uint128_t kMask_;
 
     size_t nodeCount_ = 0;
     size_t edgeCount_ = 0;
 
-    using NodeId = uint64_t;
 
     // Note: outdegree is tracked by neighbors.size
     struct NodeData {
-        std::vector<uint64_t> neighbors_; // Outgoing edges only
+        std::vector<NodeId> neighbors_; // Outgoing edges only
         size_t inDegree_ = 0;             // Number of edges entering the node
 
-        [[nodiscard]] const std::vector<uint64_t>& getNeighbors() const { return neighbors_; }
+        [[nodiscard]] const std::vector<NodeId>& getNeighbors() const { return neighbors_; }
         [[nodiscard]] size_t getInDegree() const { return inDegree_; }
         [[nodiscard]] size_t getOutDegree() const { return neighbors_.size(); }
 
-        std::vector<uint64_t>& getNeighbors() { return neighbors_; }
+        std::vector<NodeId>& getNeighbors() { return neighbors_; }
 
-        void addNeighbor(uint64_t neighbor) { neighbors_.push_back(neighbor); }
+        void addNeighbor(NodeId neighbor) { neighbors_.push_back(neighbor); }
         void incrementInDegree() { ++inDegree_; }
     };
 
@@ -57,7 +57,7 @@ private:
      * @param kmer The kmer in which the prefix and suffix will be pulled from.
      * @return Returns a tuple containing k-1 prefix and suffix.
      */
-    [[nodiscard]] std::pair<NodeId, NodeId> chop(uint64_t kmer) const;
+    [[nodiscard]] std::pair<NodeId, NodeId> chop(NodeId kmer) const;
 
 public:
 
