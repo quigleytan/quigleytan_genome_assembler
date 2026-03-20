@@ -7,7 +7,7 @@
 #include "DataInitialization/DNASequence.h"
 #include "DataProcessing/KmerEncoding.h"
 #include "DataProcessing/KmerTable.h"
-#include "EulerianPath.h"
+#include "EulerianTraversal.h"
 
 bool DebruijnGraphTests();
 bool EulerianPathTests();
@@ -156,7 +156,7 @@ bool EulerianPathTests() {
         int k = 3;
 
         DeBruijnGraph graph = buildGraph(sequence, k);
-        EulerianPath ep(graph);
+        EulerianTraversal ep(graph);
         ep.computePath();
 
         // 4 edges → 5 nodes in path
@@ -192,7 +192,7 @@ bool EulerianPathTests() {
         std::string circularized = original + original.substr(0, k - 1); // "ACGTAC"
 
         DeBruijnGraph graph = buildGraph(circularized, k);
-        EulerianPath ep(graph);
+        EulerianTraversal ep(graph);
         ep.computePath();
 
         // Circuit: first and last node in path must be identical
@@ -234,7 +234,7 @@ bool EulerianPathTests() {
         int k = 3;
 
         DeBruijnGraph graph = buildGraph(sequence, k);
-        EulerianPath ep(graph);
+        EulerianTraversal ep(graph);
         ep.computePath();
 
         // 9 edges → 10 nodes in path

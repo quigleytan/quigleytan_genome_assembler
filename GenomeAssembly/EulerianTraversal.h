@@ -18,7 +18,7 @@
 #include "DataProcessing/KmerEncoding.h"
 
 
-class EulerianPath {
+class EulerianTraversal {
 
 private:
 
@@ -34,7 +34,7 @@ private:
 
 public:
 
-    EulerianPath(DeBruijnGraph& g);
+    EulerianTraversal(DeBruijnGraph& g);
 
     /**
      * @breif Computes an Eulerian Path using Hierholzer's algorithm

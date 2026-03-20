@@ -9,19 +9,19 @@ add_executable(MainGenomeAssembly
         DataInitialization/SequenceReader.cpp
         DataProcessing/KmerEncoding.cpp
         GenomeAssembly/DeBruijnGraph.cpp
-        GenomeAssembly/EulerianPath.h
-        GenomeAssembly/EulerianPath.cpp
+        GenomeAssembly/EulerianTraversal.h
+        GenomeAssembly/EulerianTraversal.cpp
         KmerTypes.h
 )
 
 add_executable(EulerianTraversal
-        EulerianTraversal.cpp
+        EulerianAssembly.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
         DataProcessing/KmerEncoding.cpp
         GenomeAssembly/DeBruijnGraph.cpp
-        GenomeAssembly/EulerianPath.h
-        GenomeAssembly/EulerianPath.cpp
+        GenomeAssembly/EulerianTraversal.h
+        GenomeAssembly/EulerianTraversal.cpp
         KmerTypes.h
 )
 
@@ -30,9 +30,11 @@ add_executable(ContigTraversal
         DataInitialization/SequenceReader.cpp
         DataProcessing/KmerEncoding.cpp
         GenomeAssembly/DeBruijnGraph.cpp
-        GenomeAssembly/EulerianPath.h
-        GenomeAssembly/EulerianPath.cpp
+        GenomeAssembly/EulerianTraversal.h
+        GenomeAssembly/EulerianTraversal.cpp
+        GenomeAssembly/ContigTraversal.h
         KmerTypes.h
+        GenomeAssembly/ContigTraversal.cpp
 )
 
 add_executable(InitializationTests
@@ -55,9 +57,11 @@ add_executable(AssemblyTests
         GenomeAssembly/DeBruijnGraph.cpp
         DataProcessing/KmerEncoding.cpp
         DataInitialization/DNASequence.cpp
-        GenomeAssembly/EulerianPath.h
-        GenomeAssembly/EulerianPath.cpp
+        GenomeAssembly/EulerianTraversal.h
+        GenomeAssembly/EulerianTraversal.cpp
         KmerTypes.h
+        GenomeAssembly/ContigTraversal.h
+        GenomeAssembly/ContigTraversal.cpp
 )
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})

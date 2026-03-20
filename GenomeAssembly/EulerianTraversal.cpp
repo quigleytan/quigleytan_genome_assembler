@@ -1,8 +1,8 @@
-#include "EulerianPath.h"
+#include "EulerianTraversal.h"
 #include <stack>
 #include <algorithm>
 
-void EulerianPath::initializeAdjacency() {
+void EulerianTraversal::initializeAdjacency() {
     for (NodeId node : graph.getAllNodes()) {
         const auto* data = graph.findNode(node);
 
@@ -14,7 +14,7 @@ void EulerianPath::initializeAdjacency() {
     }
 }
 
-NodeId EulerianPath::findStartNode() const {
+NodeId EulerianTraversal::findStartNode() const {
 
     auto nodes = graph.getAllNodes();
 
@@ -48,9 +48,9 @@ NodeId EulerianPath::findStartNode() const {
 
 // Public methods
 
-EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g), adjCopy(g.getNodeCount() * 2) {}
+EulerianTraversal::EulerianTraversal(DeBruijnGraph& g) : graph(g), adjCopy(g.getNodeCount() * 2) {}
 
-void EulerianPath::computePath() {
+void EulerianTraversal::computePath() {
 
     path.clear();
     initializeAdjacency();
@@ -81,11 +81,11 @@ void EulerianPath::computePath() {
     std::reverse(path.begin(), path.end());
 }
 
-const std::vector<NodeId>& EulerianPath::getPath() const {
+const std::vector<NodeId>& EulerianTraversal::getPath() const {
     return path;
 }
 
-std::string EulerianPath::reconstructGenome(bool isCircuit) const {
+std::string EulerianTraversal::reconstructGenome(bool isCircuit) const {
     if (path.empty())
         throw std::runtime_error("Path is empty — call computePath() first");
 

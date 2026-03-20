@@ -15,7 +15,7 @@
 #include "DataProcessing/KmerTable.h"
 
 #include "GenomeAssembly/DeBruijnGraph.h"
-#include "GenomeAssembly/EulerianPath.h"
+#include "GenomeAssembly/EulerianTraversal.h"
 
 // -----------------------------------------------------------------------
 // Private helpers
@@ -187,7 +187,7 @@ static DeBruijnGraph buildGraph(const std::string& sequence, int k) {
 static std::string assembleGenome(DeBruijnGraph& graph,
                                    const std::string& originalSequence,
                                    int k) {
-    EulerianPath eulerianPath(graph);
+    EulerianTraversal eulerianPath(graph);
     eulerianPath.computePath();
 
     std::cout << "Path length:     " << eulerianPath.getPath().size() << " nodes\n";
@@ -239,11 +239,12 @@ static void reportResults(const DNASequence& original, const std::string& assemb
 int main() {
 
     try {
-        const std::string path = "../Data/genome_sample_ecoli.fna";
+        //const std::string path = "../Data/Escherichia coli str. K-12 substr..fna";
         //const std::string path = "../Data/small_test.fna";
         //const std::string path = "../Data/Escherichia_phage_phiX174.fna"; // Size 5386
         //const std::string path = "../Data/Saccharomyces cerevisiae S288C chromosome I.fna"; // Size 230218
         //const std::string path = "../Data/Mycoplasma_genitalium_G37.fna";
+        const std::string path = "../Data/Escherichia_phage_Lambda.fna";
 
         // Stage 1: Load
         DNASequence genome = loadGenome(path);
