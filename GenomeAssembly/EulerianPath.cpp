@@ -18,12 +18,12 @@ NodeId EulerianPath::findStartNode() const {
 
     auto nodes = graph.getAllNodes();
 
-    uint64_t startNode = nodes.front(); // Protects in case of cycle.
+    NodeId startNode = nodes.front(); // Protects in case of cycle.
 
     int startCount = 0;
     int endCount = 0;
 
-    for (uint64_t node : nodes) {
+    for (NodeId node : nodes) {
 
         const auto* data = graph.findNode(node);
 

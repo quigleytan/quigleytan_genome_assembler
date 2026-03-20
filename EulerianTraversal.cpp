@@ -191,6 +191,10 @@ static void reportResults(const DNASequence& original, const std::string& assemb
     std::cout << "Assembled: " << assembled << "\n";
     std::cout << "Lengths:   " << original.getLength() << " vs " << assembled.length() << "\n";
     */
+    std::cout << "Original:  " << original.getSequence() << "\n";
+    std::cout << "Assembled: " << assembled << "\n";
+    std::cout << "Lengths:   " << original.getLength()
+              << " vs " << assembled.length() << "\n";
 }
 
 // MAIN PROGRAM
@@ -201,7 +205,7 @@ int main() {
         //const std::string file = "../Data/genome_sample_ecoli.fna";
         //const std::string file = "../Data/ASM2073604v1_Haemophilus_influenzae";
         //const std::string file = "../Data/small_test.fna";
-        //const std::string file = "../Data/genome_small_test.fna";
+        //const std::string file = "../Data/Saccharomyces cerevisiae S288C chromosome I.fna";
         const std::string file = "../Data/Escherichia_phage_phiX174.fna";
         //const std::string file = "../Data/Mycoplasma_genitalium_G37.fna";
 

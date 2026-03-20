@@ -26,7 +26,7 @@ private:
     /**
      * @brief Encodes a single DNA base into its corresponding 2-bit representation.
      * @param base Char input value of a single base.
-     * @return 2-bit value as uint64_t.
+     * @return 2-bit value as __uint128_t.
      */
     static NodeId encodeBase(char base);
 

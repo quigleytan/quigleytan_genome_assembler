@@ -30,7 +30,6 @@ private:
     size_t nodeCount_ = 0;
     size_t edgeCount_ = 0;
 
-
     // Note: outdegree is tracked by neighbors.size
     struct NodeData {
         std::vector<NodeId> neighbors_; // Outgoing edges only

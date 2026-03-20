@@ -15,7 +15,7 @@ add_executable(MainGenomeAssembly
 )
 
 add_executable(EulerianTraversal
-        CleanSequenceTraversal.cpp
+        EulerianTraversal.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
         DataProcessing/KmerEncoding.cpp
