@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(quigleytan_genome_assembly)
+project(quigleytan_genome_assembler)
 
 set(CMAKE_CXX_STANDARD 17)
 

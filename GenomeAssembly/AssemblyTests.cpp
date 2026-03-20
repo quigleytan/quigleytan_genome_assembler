@@ -119,7 +119,7 @@ bool DebruijnGraphTests() {
     }
 
     // The remaining nodes should have in/out degrees of 1
-    std::vector<uint64_t> remainingNodes = {
+    std::vector<NodeId> remainingNodes = {
         KmerEncoding::encode("TG"), KmerEncoding::encode("GC"),
         KmerEncoding::encode("CG"), KmerEncoding::encode("TC"),
         KmerEncoding::encode("CA")

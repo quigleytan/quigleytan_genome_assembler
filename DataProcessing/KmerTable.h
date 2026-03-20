@@ -87,7 +87,8 @@ public:
         }
         size_t maxPossible = (k >= 32) ? SIZE_MAX : (size_t(1) << (2 * k));
         size_t maxUnique = std::min(maxPossible, dnaLength - k + 1);
-        items.resize(nextPrime(2 * maxUnique));
+        size_t tableSize = (maxUnique > SIZE_MAX / 2) ? nextPrime(maxUnique) : nextPrime(2 * maxUnique);
+        items.resize(tableSize);
         numItems = 0;
         this->k = k;
     }

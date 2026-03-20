@@ -3,8 +3,8 @@
 
 // Private
 std::pair<NodeId, NodeId> DeBruijnGraph::chop(NodeId kmer) const {
-    uint64_t prefix = kmer >> 2; // Naturally discards
-    uint64_t suffix = kmer & kMask_;
+    __uint128_t prefix = kmer >> 2; // Naturally discards
+    __uint128_t suffix = kmer & kMask_;
 
     return {prefix, suffix};
 }

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <iomanip>
 
 #include "CustomExceptions/DNASequenceException.h"
 
@@ -81,6 +82,31 @@ static std::vector<int> kmpSearch(const std::string& pat, const std::string& txt
     return res;
 }
 
+static size_t findRotationOffset(const std::string& original, const std::string& assembled) {
+    if (original.length() != assembled.length()) return std::string::npos;
+    if (original == assembled) return 0;
+
+    size_t n = original.length();
+    std::string doubled = assembled + assembled;
+
+    // KMP on 'original' as pattern, 'doubled' as text
+    std::vector<int> lps(n, 0);
+    int len = 0, i = 1;
+    while (i < (int)n) {
+        if (original[i] == original[len]) { lps[i++] = ++len; }
+        else if (len != 0)                { len = lps[len-1]; }
+        else                              { lps[i++] = 0; }
+    }
+
+    size_t j = 0;
+    for (size_t k = 0; k < doubled.size(); ++k) {
+        while (j > 0 && doubled[k] != original[j]) j = lps[j-1];
+        if (doubled[k] == original[j]) ++j;
+        if (j == n) return k - n + 1; // offset into assembled
+    }
+    return std::string::npos;
+}
+
 // -----------------------------------------------------------------------
 // Pipeline stages
 // -----------------------------------------------------------------------
@@ -145,14 +171,18 @@ static DeBruijnGraph buildGraph(const std::string& sequence, int k) {
  * the assembled string back to the original sequence length.
  *
  * Since the graph is built from a circularized sequence, the Eulerian path
- * is a circuit and the start node is non-deterministic. To produce a
- * consistent result, the assembled string is rotated to align with the
- * original sequence using a KMP search for the first k bases of the original.
+ * is a circuit and the start node is non-deterministic. The assembled string
+ * is normalized back to the original start position by searching for the
+ * assembled string as a substring of original+original using KMP. The match
+ * position gives the rotation offset needed to align the two sequences.
  *
  * @param graph            The populated De Bruijn graph.
  * @param originalSequence The original (non-circularized) sequence string.
- * @param k                K-mer size used to build the graph.
- * @return                 Assembled genome string normalized to original start position.
+ * @param k                K-mer size used to build the graph (unused directly,
+ *                         retained for interface consistency).
+ * @return                 Assembled genome string normalized to original start
+ *                         position, or the unrotated string if no rotation match
+ *                         is found (caller can detect via RECONSTRUCTION: FAILED).
  */
 static std::string assembleGenome(DeBruijnGraph& graph,
                                    const std::string& originalSequence,
@@ -166,19 +196,21 @@ static std::string assembleGenome(DeBruijnGraph& graph,
     if (assembled.length() > originalSequence.length())
         assembled = assembled.substr(0, originalSequence.length());
 
-    // Normalize rotation: find where original's first k bases appear in
-    // assembled and rotate to that offset. This corrects for the non-
-    // deterministic circuit start without relying on isRotation().
-    std::string anchor = originalSequence.substr(0, k);
-    std::string doubled = assembled + assembled;
-    auto matches = kmpSearch(anchor, doubled);
+    // Find the rotation offset by searching assembled inside original+original.
+    // This correctly handles the non-deterministic circuit start without relying
+    // on a short anchor that may appear at multiple offsets.
 
-    if (!matches.empty()) {
-        size_t offset = static_cast<size_t>(matches.front());
-        assembled = assembled.substr(offset) +
-                    assembled.substr(0, offset);
+    size_t offset = findRotationOffset(originalSequence, assembled);
+    if (offset != std::string::npos && offset != 0) {
+        assembled = assembled.substr(offset) + assembled.substr(0, offset);
     }
 
+    std::cout << "Rotation offset: ";
+    std::cout << std::scientific << static_cast<double>(offset);
+    std::cout << " bases\n";
+
+    // assembled starts offset bases into the original. Rotating assembled
+    // left by offset positions aligns it with the original start.
     return assembled;
 }
 
@@ -207,9 +239,11 @@ static void reportResults(const DNASequence& original, const std::string& assemb
 int main() {
 
     try {
-        //const std::string path = "../Data/genome_sample_ecoli.fna";
+        const std::string path = "../Data/genome_sample_ecoli.fna";
         //const std::string path = "../Data/small_test.fna";
-        const std::string path = "../Data/Escherichia_phage_phiX174.fna";
+        //const std::string path = "../Data/Escherichia_phage_phiX174.fna"; // Size 5386
+        //const std::string path = "../Data/Saccharomyces cerevisiae S288C chromosome I.fna"; // Size 230218
+        //const std::string path = "../Data/Mycoplasma_genitalium_G37.fna";
 
         // Stage 1: Load
         DNASequence genome = loadGenome(path);
@@ -217,14 +251,18 @@ int main() {
         std::cout << "Sequence length: " << genome.getLength() << " bases\n";
 
         // Stage 2: Build
-        int k = getIntFromUser();
-        DeBruijnGraph graph = buildGraph(genome.getSequence(), k);
+        //int k = getIntFromUser();
+        for (int k = 20; k <= 63; ++k) {
+            std::cout << "Kmer size: " << k << "\n";
 
-        // Stage 3: Assemble — pass original sequence and k for rotation normalization
-        std::string assembled = assembleGenome(graph, genome.getSequence(), k);
+            DeBruijnGraph graph = buildGraph(genome.getSequence(), k);
 
-        // Stage 4: Report
-        reportResults(genome, assembled);
+            // Stage 3: Assemble
+            std::string assembled = assembleGenome(graph, genome.getSequence(), k);
+
+            // Stage 4: Report
+            reportResults(genome, assembled);
+        }
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << "\n";
