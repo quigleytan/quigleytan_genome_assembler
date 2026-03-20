@@ -25,6 +25,16 @@ add_executable(EulerianTraversal
         KmerTypes.h
 )
 
+add_executable(ContigTraversal
+        DataInitialization/DNASequence.cpp
+        DataInitialization/SequenceReader.cpp
+        DataProcessing/KmerEncoding.cpp
+        GenomeAssembly/DeBruijnGraph.cpp
+        GenomeAssembly/EulerianPath.h
+        GenomeAssembly/EulerianPath.cpp
+        KmerTypes.h
+)
+
 add_executable(InitializationTests
         DataInitialization/InitializationTests.cpp
         DataInitialization/DNASequence.cpp
