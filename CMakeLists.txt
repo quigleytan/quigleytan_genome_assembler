@@ -13,10 +13,21 @@ add_executable(M3OEP-tequigle
         GenomeAssembly/EulerianPath.cpp
 )
 
+add_executable(EulerianTraversal
+        CleanSequenceTraversal.cpp
+        DataInitialization/DNASequence.cpp
+        DataInitialization/SequenceReader.cpp
+        DataProcessing/KmerEncoding.cpp
+        GenomeAssembly/DeBruijnGraph.cpp
+        GenomeAssembly/EulerianPath.h
+        GenomeAssembly/EulerianPath.cpp
+)
+
 add_executable(InitializationTests
         DataInitialization/InitializationTests.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
+        DataProcessing/KmerEncoding.cpp
 )
 
 add_executable(ProcessingTests
@@ -32,12 +43,12 @@ add_executable(AssemblyTests
         DataInitialization/DNASequence.cpp
         GenomeAssembly/EulerianPath.h
         GenomeAssembly/EulerianPath.cpp
-
 )
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 
 target_include_directories(M3OEP-tequigle PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(EulerianTraversal PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(InitializationTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(ProcessingTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(AssemblyTests PRIVATE ${PROJECT_INCLUDE_DIR})

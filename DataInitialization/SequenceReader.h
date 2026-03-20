@@ -17,6 +17,8 @@
 #include "DNASequence.h"
 #include <optional>
 #include <istream>
+#include "DataProcessing/KmerTable.h"
+#include "DataProcessing/KmerEncoding.h"
 
 class SequenceReader {
 
@@ -35,6 +37,9 @@ public:
      * @return Optional DNASequence object if successful, null optional if the file is empty
      */
     static std::optional<DNASequence> readFastq(std::istream& in);
+
+    // In SequenceReader.h — add this static method
+    static void encodeAllReads(std::istream& in, size_t k, KmerTable& table);
 };
 
 #endif //SEQUENCE_READER_H

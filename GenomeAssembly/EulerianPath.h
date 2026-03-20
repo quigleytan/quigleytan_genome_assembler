@@ -12,7 +12,6 @@
 #define EULERIAN_PATH_H
 
 #include <vector>
-#include <stack>
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "DataProcessing/OpenAddressingTable.h"
 #include "DataProcessing/KmerEncoding.h"
@@ -50,9 +49,18 @@ public:
      */
     void computePath();
 
+    /**
+     *
+     * @return
+     */
     [[nodiscard]] const std::vector<uint64_t>& getPath() const;
 
-    [[nodiscard]] std::string reconstructGenome() const;
+    /**
+     *
+     * @param isCircular
+     * @return
+     */
+    [[nodiscard]] std::string reconstructGenome(bool isCircular) const;
 };
 
 #endif

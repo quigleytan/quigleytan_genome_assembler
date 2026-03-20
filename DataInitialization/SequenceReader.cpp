@@ -60,3 +60,19 @@ std::optional<DNASequence> SequenceReader::readFastq(std::istream& in) {
     // We ignore quality for now
     return DNASequence(header, sequence);
 }
+
+// In SequenceReader.cpp
+void SequenceReader::encodeAllReads(std::istream& in, size_t k, KmerTable& table) {
+    size_t readCount = 0;
+
+    while (true) {
+        auto read = readFastq(in);
+        if (!read) break;  // EOF
+
+        KmerEncoding::encodeSequence(read->getSequence(), k, table);
+        ++readCount;
+    }
+
+    if (readCount == 0)
+        throw std::runtime_error("No reads found in file");
+}

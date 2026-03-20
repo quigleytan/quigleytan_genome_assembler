@@ -1,5 +1,5 @@
 #include "EulerianPath.h"
-
+#include <stack>
 #include <algorithm>
 
 void EulerianPath::initializeAdjacency() {
@@ -48,7 +48,7 @@ uint64_t EulerianPath::findStartNode() const {
 
 // Public methods
 
-EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g) {}
+EulerianPath::EulerianPath(DeBruijnGraph& g) : graph(g), adjCopy(g.getNodeCount() * 2) {}
 
 void EulerianPath::computePath() {
 
@@ -85,20 +85,17 @@ const std::vector<uint64_t>& EulerianPath::getPath() const {
     return path;
 }
 
-std::string EulerianPath::reconstructGenome() const {
+std::string EulerianPath::reconstructGenome(bool isCircuit) const {
     if (path.empty())
         throw std::runtime_error("Path is empty — call computePath() first");
 
     const size_t nodeLen = graph.getK() - 1;
-
     std::string genome = KmerEncoding::decode(path.front(), nodeLen);
 
-    // For a circuit, path.back() == path.front(), so exclude the last node
-    size_t end = (path.front() == path.back()) ? path.size() - 1 : path.size();
+    size_t end = isCircuit ? path.size() - 1 : path.size();
 
     for (size_t i = 1; i < end; ++i) {
         genome += KmerEncoding::decode(path[i], nodeLen).back();
     }
-
     return genome;
 }
