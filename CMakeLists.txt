@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
-project(M30EP-tequigle)
+project(quigleytan_genome_assembly)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(M3OEP-tequigle
+add_executable(MainGenomeAssembly
         main.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
@@ -52,7 +52,7 @@ add_executable(AssemblyTests
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 
-target_include_directories(M3OEP-tequigle PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(MainGenomeAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(EulerianTraversal PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(InitializationTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(ProcessingTests PRIVATE ${PROJECT_INCLUDE_DIR})
