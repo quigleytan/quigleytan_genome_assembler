@@ -20,10 +20,11 @@
 #include <cstdint>
 #include <vector>
 #include <cmath>
+#include "KmerTypes.h"
 
 #include "DataProcessing/OpenAddressingTable.h"
 
-class KmerTable : public OpenAddressingTable<uint64_t, size_t> {
+class KmerTable : public OpenAddressingTable<NodeId, size_t> {
 
 protected:
 
@@ -84,7 +85,7 @@ public:
             numItems = 0;
             return;
         }
-        size_t maxPossible = (k >= 32) ? SIZE_MAX : (size_t(1) << (2 * k));
+        size_t maxPossible = (k >= 64) ? SIZE_MAX : (size_t(1) << (2 * k));
         size_t maxUnique = std::min(maxPossible, dnaLength - k + 1);
         items.resize(nextPrime(2 * maxUnique));
         numItems = 0;

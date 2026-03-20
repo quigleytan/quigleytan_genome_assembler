@@ -8,7 +8,7 @@
  *   to encode an entire sequence into a KmerTable.
  * Important notes:
  * - Uses the key: A = 00, C = 01, G = 10, T = 11 for 2-bit encoding.
- * - All encoded kmers are stored as uint64_t.
+ * - All encoded kmers are stored as __uint128_t.
  * - Used for quick storage and retrieval in hash tables.
  */
 
@@ -36,11 +36,11 @@ private:
      * Shifts the previous k-mer left by 2 bits, adds the new base, and applies a bitmask to ensure
      * only the last k bases are kept.
      *
-     * @param prev 2-bit encoded previous kmer as uint64_t.
+     * @param prev 2-bit encoded previous kmer as __uint128_t.
      * @param next Char input value of the next base to add.
      * @param k Set k-mer length to use when rolling.
      *
-     * @return 2-bit encoded next kmer as uint64_t.
+     * @return 2-bit encoded next kmer as __uint128_t.
      */
     static NodeId roll(NodeId prev, char next, size_t k);
 
@@ -51,11 +51,11 @@ public:
     /**
      * @brief Validates that k is a usable kmer size for the graph.
      *
-     * Throws an exception if k is not < 2 or k > 32, as using uint64_t (unsigned long long) causes undefined
-     * behavior to occur past K-values of 33 or more.
+     * Throws an exception if k is not < 2 or k > 64, as using __uint128_t causes undefined
+     * behavior to occur past K-values of 64 or more.
      *
      * @param k K-value that is being used to initialize the table.
-     * @return Returns the k value if valid, throws an exception if k is < 2 or k > 32.
+     * @return Returns the k value if valid, throws an exception if k is < 2 or k > 64.
      */
     static size_t validateK(size_t k);
 
@@ -79,7 +79,7 @@ public:
      *
      * @param kmer String of initial kmer to encode.
      *
-     * @return 2-bit encoded kmer as uint64_t.
+     * @return 2-bit encoded kmer as __uint128_t.
      */
     static NodeId encode(const std::string& kmer);
 
@@ -89,7 +89,7 @@ public:
      * Decodes a k-mer key for results reporting and easier interpretation of results.
      * Only for use with user interaction, keep everything encoded in logical implementation.
      *
-     * @param kmer 2-bit encoded kmer as uint64_t.
+     * @param kmer 2-bit encoded kmer as __uint128_t.
      * @param k The length of the k-mer.
      * @return Equivalent string representation.
      */

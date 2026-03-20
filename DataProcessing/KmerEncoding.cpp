@@ -33,12 +33,12 @@ size_t KmerEncoding::validateK(size_t k) {
 
 __uint128_t KmerEncoding::bitmask(size_t k) {
     // Bitmask to keep last k bases (2 bits per base)
-    return (1ULL << (2 * k)) - 1;
+    return ((__uint128_t)1 << (2 * k)) - 1;
 }
 
 // START OF ENCODING SEQUENCE
 NodeId KmerEncoding::encode(const std::string& kmer) {
-    uint64_t value = 0;
+    __uint128_t value = 0;
     for (char base : kmer) {
         value <<= 2; // Shift left to include the next base
         value |= encodeBase(base); // Adds new base
