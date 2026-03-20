@@ -14,6 +14,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 template <typename Key, typename Value>
 
@@ -34,17 +35,25 @@ protected:
     std::vector<Item> items;
 
     /**
-     * @brief Hash key function for mixing.
-     *
-     * Method to better distribute keys across the table and reduce collisions.
-     * Currently, it uses std::hash and modulo, but can be replaced with a stronger mixing function if needed.
-     *
-     * @param key The key to be hashed.
-     * @return The hash key used to determine the index for the key in the table.
-     * TODO: Replace with stronger mixing function
-     */
+    * @brief Hash key function for mixing.
+    *
+    * Method to better distribute keys across the table and reduce collisions.
+    * For __uint128_t keys, mixes the upper and lower 64-bit halves since
+    * std::hash is not defined for __uint128_t.
+    * For all other key types, falls back to std::hash.
+    *
+    * @param key The key to be hashed.
+    * @return The hash key used to determine the index for the key in the table.
+    */
     virtual size_t hashKey(const Key& key) const {
-        return std::hash<Key>{}(key) % items.size();
+        if constexpr (std::is_same_v<Key, __uint128_t>) {
+            // Mix upper and lower 64-bit halves — std::hash not defined for __uint128_t
+            uint64_t lo = static_cast<uint64_t>(key);
+            uint64_t hi = static_cast<uint64_t>(key >> 64);
+            return (lo ^ (hi * 0x9e3779b97f4a7c15ULL)) % items.size();
+        } else {
+            return std::hash<Key>{}(key) % items.size();
+        }
     }
 
     /**

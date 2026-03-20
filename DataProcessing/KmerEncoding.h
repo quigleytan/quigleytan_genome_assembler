@@ -46,7 +46,7 @@ private:
 
 public:
 
-    static constexpr size_t MAX_K_128 = 64;
+    static constexpr size_t MAX_K_128 = 63;
 
     /**
      * @brief Validates that k is a usable kmer size for the graph.

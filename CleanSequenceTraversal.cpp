@@ -16,9 +16,7 @@
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "GenomeAssembly/EulerianPath.h"
 
-// -----------------------------------------------------------------------
-// Private helpers
-// -----------------------------------------------------------------------
+// PRIVATE HELPER FUNCTIONS
 
 int getIntFromUser() {
     while (true) {
@@ -91,9 +89,7 @@ static bool isRotation(const std::string& original, const std::string& assembled
     return !kmpSearch(assembled, doubled).empty();
 }
 
-// -----------------------------------------------------------------------
-// Pipeline stages
-// -----------------------------------------------------------------------
+// PIPELINE
 
 /**
  * @brief Stage 1 — Load a FASTA file into a DNASequence.
@@ -197,9 +193,7 @@ static void reportResults(const DNASequence& original, const std::string& assemb
     */
 }
 
-// -----------------------------------------------------------------------
-// Main
-// -----------------------------------------------------------------------
+// MAIN PROGRAM
 
 int main() {
 
