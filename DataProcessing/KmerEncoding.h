@@ -15,7 +15,6 @@
 #ifndef KMER_ENCODER_H
 #define KMER_ENCODER_H
 
-#include <cstdint>
 #include <string>
 #include "KmerTable.h"
 #include "KmerTypes.h"

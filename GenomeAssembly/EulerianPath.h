@@ -12,11 +12,11 @@
 #define EULERIAN_PATH_H
 
 #include <vector>
+#include "KmerTypes.h"
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "DataProcessing/OpenAddressingTable.h"
 #include "DataProcessing/KmerEncoding.h"
 
-using NodeId = uint64_t;
 
 class EulerianPath {
 
@@ -24,16 +24,13 @@ private:
 
     DeBruijnGraph& graph;
 
-    // copy of the adjacency list so edges can be consumed
     OpenAddressingTable<NodeId, std::vector<NodeId>> adjCopy;
 
-    // final path
-    std::vector<uint64_t> path;
+    std::vector<NodeId> path;
 
-    // helper functions
     void initializeAdjacency();
 
-    [[nodiscard]] uint64_t findStartNode() const;
+    [[nodiscard]] NodeId findStartNode() const;
 
 public:
 
@@ -53,7 +50,7 @@ public:
      *
      * @return
      */
-    [[nodiscard]] const std::vector<uint64_t>& getPath() const;
+    [[nodiscard]] const std::vector<NodeId>& getPath() const;
 
     /**
      *
