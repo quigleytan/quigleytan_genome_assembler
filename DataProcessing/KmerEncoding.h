@@ -16,6 +16,7 @@
 #define KMER_ENCODER_H
 
 #include <string>
+
 #include "KmerTable.h"
 #include "KmerTypes.h"
 

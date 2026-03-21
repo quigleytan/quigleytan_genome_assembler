@@ -67,7 +67,9 @@ std::vector<NodeId> DeBruijnGraph::getAllNodes() const {
 void DeBruijnGraph::printGraph() const {
     std::cout << "De Bruijn Graph\n";
     std::cout << "--------------------------------------\n";
+
     auto nodes = getAllNodes();
+
     for (NodeId node : nodes) {
         std::cout << KmerEncoding::decode(node, k_ - 1)
                   << " | in: " << findNode(node)->getInDegree()

@@ -14,11 +14,12 @@
 #ifndef SEQUENCE_READER_H
 #define SEQUENCE_READER_H
 
-#include "DNASequence.h"
 #include <optional>
 #include <istream>
+#include <string>
+
+#include "DNASequence.h"
 #include "DataProcessing/KmerTable.h"
-#include "DataProcessing/KmerEncoding.h"
 
 class SequenceReader {
 
@@ -38,8 +39,8 @@ public:
      */
     static std::optional<DNASequence> readFastq(std::istream& in);
 
-    // In SequenceReader.h — add this static method
     static void encodeAllReads(std::istream& in, size_t k, KmerTable& table);
+
 };
 
 #endif //SEQUENCE_READER_H

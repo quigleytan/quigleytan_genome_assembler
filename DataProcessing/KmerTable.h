@@ -19,9 +19,8 @@
 
 #include <cstdint>
 #include <vector>
-#include <cmath>
-#include "KmerTypes.h"
 
+#include "KmerTypes.h"
 #include "DataProcessing/OpenAddressingTable.h"
 
 class KmerTable : public OpenAddressingTable<NodeId, size_t> {
@@ -100,7 +99,5 @@ public:
     [[nodiscard]] size_t getK() const {
         return k;
     }
-
 };
-
 #endif //KMER_TABLE_H

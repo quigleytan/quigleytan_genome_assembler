@@ -10,8 +10,6 @@
  * Additional:
  * - Internally uses a helper struct AnalysisResult for single-pass computation.
  * - All internal methods and structs are private.
- * TODO items for future work:
- * - Include to_string or summary function.
  */
 
 #ifndef DNA_SEQUENCE_H
@@ -23,7 +21,6 @@ class DNASequence {
 
 private:
 
-    // Variables
     std::string name_;
     std::string sequence_;
     std::string complementSequence_;
@@ -63,8 +60,6 @@ public:
      */
     DNASequence(const std::string& name, const std::string& inputSequence);
 
-    // Getters
-
     /**
      * @brief Returns the DNA sequence string.
      * @return sequence The DNA sequence string (immutable after construction).
@@ -101,7 +96,7 @@ public:
      */
     [[nodiscard]] double getGCPercent() const;
 
-    //Overloaded comparisons
+    // Overloaded comparisons
     friend bool operator == (const DNASequence &sequenceOne, const DNASequence &sequenceTwo);
 
     friend bool operator != (const DNASequence &sequenceOne, const DNASequence &sequenceTwo);

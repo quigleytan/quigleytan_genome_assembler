@@ -1,7 +1,9 @@
 #include "DNASequence.h"
-#include "../CustomExceptions/DNASequenceException.h"
+
+#include "CustomExceptions/DNASequenceException.h"
 
 // USED ONLY IN CONSTRUCTOR
+
 DNASequence::AnalysisResult DNASequence::analyzeSequence(const std::string& inputSequence) {
     // Ensures no empty sequences are added
     if (inputSequence.empty()) {
@@ -27,7 +29,8 @@ DNASequence::AnalysisResult DNASequence::analyzeSequence(const std::string& inpu
     return {complement, gcCount, gcPercent};
 }
 
-// Constructor
+// PUBLIC
+
 DNASequence::DNASequence(const std::string& name, const std::string& inputSequence)
     : sequence_(inputSequence),
     length_(inputSequence.length()) {
@@ -38,7 +41,8 @@ DNASequence::DNASequence(const std::string& name, const std::string& inputSequen
     gcPercent_ = analysis.gcPercent_;
 }
 
-// Getters
+// GETTERS
+
 const std::string& DNASequence::getSequence() const {
     return sequence_;
 }
@@ -63,7 +67,8 @@ double DNASequence::getGCPercent() const {
     return gcPercent_;
 }
 
-// Comparison overloaded operators used to compare the composition of two sequences
+// OVERLOADED OPERATORS
+
 bool operator == (const DNASequence &sequenceOne, const DNASequence &sequenceTwo) {
     return sequenceOne.getSequence() == sequenceTwo.getSequence();
 }

@@ -1,6 +1,7 @@
 #include "KmerEncoding.h"
 
 #include <stdexcept>
+
 #include "CustomExceptions/DNASequenceException.h"
 
 NodeId KmerEncoding::encodeBase(char base) {
