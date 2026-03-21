@@ -1,12 +1,17 @@
 #include "EulerianTraversal.h"
+
 #include <stack>
 #include <algorithm>
 
-void EulerianTraversal::initializeAdjacency() {
-    for (NodeId node : graph.getAllNodes()) {
-        const auto* data = graph.findNode(node);
+#include "DataProcessing/KmerEncoding.h"
 
-        auto [neighborRef, isNew] = adjCopy.insert(node);
+// PRIVATE HELPER FUNCTIONS
+
+void EulerianTraversal::initializeAdjacency() {
+    for (NodeId node : graph_.getAllNodes()) {
+        const auto* data = graph_.findNode(node);
+
+        auto [neighborRef, isNew] = adjCopy_.insert(node);
         neighborRef = data->getNeighbors();
 
         // Sort neighbors for deterministic traversal order
@@ -16,8 +21,7 @@ void EulerianTraversal::initializeAdjacency() {
 
 NodeId EulerianTraversal::findStartNode() const {
 
-    auto nodes = graph.getAllNodes();
-
+    auto nodes = graph_.getAllNodes();
     NodeId startNode = nodes.front(); // Protects in case of cycle.
 
     int startCount = 0;
@@ -25,8 +29,7 @@ NodeId EulerianTraversal::findStartNode() const {
 
     for (NodeId node : nodes) {
 
-        const auto* data = graph.findNode(node);
-
+        const auto* data = graph_.findNode(node);
         int diff = static_cast<int>(data->getOutDegree()) - static_cast<int>(data->getInDegree());
 
         if (diff == 1) {
@@ -38,7 +41,6 @@ NodeId EulerianTraversal::findStartNode() const {
             throw std::runtime_error("Graph is not Eulerian");
         }
     }
-
     // Checking Eulerian conditions
     if (!((startCount == 1 && endCount == 1) || (startCount == 0 && endCount == 0)))
         throw std::runtime_error("Graph does not contain an Eulerian path");
@@ -46,13 +48,13 @@ NodeId EulerianTraversal::findStartNode() const {
     return startNode; // Returns a valid node in both cycle and path.
 }
 
-// Public methods
+// PUBLIC
 
-EulerianTraversal::EulerianTraversal(DeBruijnGraph& g) : graph(g), adjCopy(g.getNodeCount() * 2) {}
+EulerianTraversal::EulerianTraversal(DeBruijnGraph& g) : graph_(g), adjCopy_(g.getNodeCount() * 2) {}
 
 void EulerianTraversal::computePath() {
 
-    path.clear();
+    path_.clear();
     initializeAdjacency();
 
     std::stack<NodeId> stack;
@@ -65,7 +67,7 @@ void EulerianTraversal::computePath() {
 
         // Accesses the current node and retrieve its remaining unused edges.
         NodeId currentID = stack.top();
-        auto* neighbors = adjCopy.find(currentID);
+        auto* neighbors = adjCopy_.find(currentID);
 
         // Checks if the current node has neighbors, then takes an edge and moves to the next node.
         if (!neighbors->empty()) {
@@ -73,29 +75,30 @@ void EulerianTraversal::computePath() {
             neighbors->pop_back();   // Deletes the edge immediately.
             stack.push(next);
         } else { // If no edges remain, adds the node to the path and backtrack.
-            path.push_back(currentID);
+            path_.push_back(currentID);
             stack.pop();
         }
     }
 
-    std::reverse(path.begin(), path.end());
+    std::reverse(path_.begin(), path_.end());
 }
 
 const std::vector<NodeId>& EulerianTraversal::getPath() const {
-    return path;
+    return path_;
 }
 
 std::string EulerianTraversal::reconstructGenome(bool isCircuit) const {
-    if (path.empty())
+    if (path_.empty())
         throw std::runtime_error("Path is empty — call computePath() first");
 
-    const size_t nodeLen = graph.getK() - 1;
-    std::string genome = KmerEncoding::decode(path.front(), nodeLen);
+    const size_t nodeLen = graph_.getK() - 1;
+    std::string genome = KmerEncoding::decode(path_.front(), nodeLen);
 
-    size_t end = isCircuit ? path.size() - 1 : path.size();
+    // Circuit case - exclude the last node (identical to the first).
+    size_t end = isCircuit ? path_.size() - 1 : path_.size();
 
     for (size_t i = 1; i < end; ++i) {
-        genome += KmerEncoding::decode(path[i], nodeLen).back();
+        genome += KmerEncoding::decode(path_[i], nodeLen).back();
     }
     return genome;
 }

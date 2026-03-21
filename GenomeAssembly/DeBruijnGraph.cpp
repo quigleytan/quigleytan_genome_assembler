@@ -1,7 +1,8 @@
 #include "DeBruijnGraph.h"
 #include "DataProcessing/KmerEncoding.h"
 
-// Private
+// PRIVATE HELPER FUNCTION
+
 std::pair<NodeId, NodeId> DeBruijnGraph::chop(NodeId kmer) const {
     __uint128_t prefix = kmer >> 2; // Naturally discards
     __uint128_t suffix = kmer & kMask_;
@@ -9,12 +10,14 @@ std::pair<NodeId, NodeId> DeBruijnGraph::chop(NodeId kmer) const {
     return {prefix, suffix};
 }
 
-// Constructor
+// PUBLIC
+
 DeBruijnGraph::DeBruijnGraph(size_t k, size_t expectedNodes)
     : k_(KmerEncoding::validateK(k)),
       kMask_(KmerEncoding::bitmask(k_ - 1)),
       table_(expectedNodes * 2) {}
-// Getters
+
+// GETTERS
 
 size_t DeBruijnGraph::getK() const {
     return k_;
@@ -27,6 +30,8 @@ size_t DeBruijnGraph::getNodeCount() const {
 size_t DeBruijnGraph::getEdgeCount() const {
     return edgeCount_;
 }
+
+// GRAPH FUNCTIONALITY
 
 const DeBruijnGraph::NodeData *DeBruijnGraph::findNode(NodeId node) const{
     return table_.find(node);
@@ -63,22 +68,16 @@ void DeBruijnGraph::printGraph() const {
     std::cout << "De Bruijn Graph\n";
     std::cout << "--------------------------------------\n";
     auto nodes = getAllNodes();
-
     for (NodeId node : nodes) {
-
         std::cout << KmerEncoding::decode(node, k_ - 1)
                   << " | in: " << findNode(node)->getInDegree()
                   << " | out: " << findNode(node)->getOutDegree()
                   << " | -> ";
-
         auto neighbors = findNode(node)->getNeighbors();
-
         for (NodeId neighbor : neighbors) {
             std::cout << KmerEncoding::decode(neighbor, k_ - 1) << " ";
         }
-
         std::cout << "\n";
     }
-
     std::cout << "--------------------------------------\n";
 }

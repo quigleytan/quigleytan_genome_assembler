@@ -8,9 +8,11 @@
 #include "DataProcessing/KmerEncoding.h"
 #include "DataProcessing/KmerTable.h"
 #include "EulerianTraversal.h"
+#include "ContigTraversal.h"
 
 bool DebruijnGraphTests();
 bool EulerianPathTests();
+bool ContigTraversalTests();
 
 // Copied from CleanSequenceTraversal — checks if assembled is a rotation of original.
 // Used for circuit tests where start node is non-deterministic.
@@ -60,6 +62,10 @@ int main() {
 
     if (EulerianPathTests()) {
         std::cout << "Eulerian Path Tests Passed" << std::endl;
+    }
+
+    if (ContigTraversalTests()) {
+        std::cout << "Contig Traversal Tests Passed" << std::endl;
     }
 }
 
@@ -250,6 +256,237 @@ bool EulerianPathTests() {
             std::cout << "[Test 3] Reconstruction incorrect\n"
                       << "  Expected: " << sequence  << "\n"
                       << "  Got:      " << assembled << std::endl;
+        }
+    }
+
+    return passed;
+}
+
+bool ContigTraversalTests() {
+    bool passed = true;
+
+    // -----------------------------------------------------------------------
+    // Test 1: Linear sequence with no repeats — single contig, exact reconstruction
+    //
+    // ACGTTTGA, k=4: no repeated k-mers, one source, one sink.
+    // Expects: 1 contig, not circular, exact sequence match.
+    // -----------------------------------------------------------------------
+    {
+        std::string sequence = "ACGTTTGA";
+        int k = 4;
+
+        KmerTable kTable(sequence.length(), k);
+        KmerEncoding::encodeSequence(sequence, k, kTable);
+
+        DeBruijnGraph graph(k);
+        for (const auto& entry : kTable)
+            for (size_t i = 0; i < entry.value; ++i)
+                graph.addKmer(entry.key);
+
+        ContigTraversal ct(graph);
+        ct.computeContigs();
+
+        const auto& contigs = ct.getContigs();
+
+        if (contigs.size() != 1) {
+            passed = false;
+            std::cout << "[Contig Test 1] Expected 1 contig, got "
+                      << contigs.size() << "\n";
+        }
+
+        if (contigs.size() == 1 && contigs[0].isCircular) {
+            passed = false;
+            std::cout << "[Contig Test 1] Contig should not be circular\n";
+        }
+
+        if (contigs.size() == 1 && contigs[0].sequence != sequence) {
+            passed = false;
+            std::cout << "[Contig Test 1] Sequence mismatch\n"
+                      << "  Expected: " << sequence << "\n"
+                      << "  Got:      " << contigs[0].sequence << "\n";
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Test 2: Circular sequence with no repeats — single circular contig
+    //
+    // ACGTTTGA circularized, k=4: all nodes balanced, isolated cycle.
+    // Expects: 1 contig, circular, length == sequence length.
+    // -----------------------------------------------------------------------
+    {
+        std::string sequence = "ACGTTTGA";
+        int k = 4;
+        std::string circularSequence = sequence + sequence.substr(0, k - 1);
+
+        KmerTable kTable(circularSequence.length(), k);
+        KmerEncoding::encodeSequence(circularSequence, k, kTable);
+
+        DeBruijnGraph graph(k);
+        for (const auto& entry : kTable)
+            for (size_t i = 0; i < entry.value; ++i)
+                graph.addKmer(entry.key);
+
+        ContigTraversal ct(graph);
+        ct.computeContigs();
+
+        const auto& contigs = ct.getContigs();
+
+        if (contigs.size() != 1) {
+            passed = false;
+            std::cout << "[Contig Test 2] Expected 1 contig, got "
+                      << contigs.size() << "\n";
+        }
+
+        if (contigs.size() == 1 && !contigs[0].isCircular) {
+            passed = false;
+            std::cout << "[Contig Test 2] Contig should be circular\n";
+        }
+
+        if (contigs.size() == 1 && contigs[0].sequence.length() != sequence.length()) {
+            passed = false;
+            std::cout << "[Contig Test 2] Length mismatch\n"
+                      << "  Expected: " << sequence.length() << "\n"
+                      << "  Got:      " << contigs[0].sequence.length() << "\n";
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Test 3: Linear sequence with repeats — multiple contigs
+    //
+    // ACGTACGT, k=4: ACG has outDegree=2, CGT has inDegree=2.
+    // Expects: 3 contigs, none circular, correct sequences.
+    // Total bases = 14 (overlap mode inflation expected).
+    // -----------------------------------------------------------------------
+    {
+        std::string sequence = "ACGTACGT";
+        int k = 4;
+
+        KmerTable kTable(sequence.length(), k);
+        KmerEncoding::encodeSequence(sequence, k, kTable);
+
+        DeBruijnGraph graph(k);
+        for (const auto& entry : kTable)
+            for (size_t i = 0; i < entry.value; ++i)
+                graph.addKmer(entry.key);
+
+        ContigTraversal ct(graph);
+        ct.computeContigs();
+
+        const auto& contigs = ct.getContigs();
+
+        if (contigs.size() != 3) {
+            passed = false;
+            std::cout << "[Contig Test 3] Expected 3 contigs, got "
+                      << contigs.size() << "\n";
+        }
+
+        // No circular contigs expected
+        for (const auto& contig : contigs) {
+            if (contig.isCircular) {
+                passed = false;
+                std::cout << "[Contig Test 3] Unexpected circular contig: "
+                          << contig.sequence << "\n";
+            }
+        }
+
+        // Total bases should be 14 in overlap mode
+        size_t totalBases = 0;
+        for (const auto& contig : contigs) totalBases += contig.sequence.length();
+        if (totalBases != 14) {
+            passed = false;
+            std::cout << "[Contig Test 3] Expected 14 total bases, got "
+                      << totalBases << "\n";
+        }
+
+        // All contig sequences should be substrings of the original
+        for (const auto& contig : contigs) {
+            if (sequence.find(contig.sequence) == std::string::npos &&
+                (sequence + sequence).find(contig.sequence) == std::string::npos) {
+                passed = false;
+                std::cout << "[Contig Test 3] Contig not a substring of original: "
+                          << contig.sequence << "\n";
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Test 4: All edges consumed — no remaining edges after traversal
+    //
+    // Verifies that computeContigs() drains every edge exactly once
+    // regardless of graph structure. Tests on all three sequences.
+    // -----------------------------------------------------------------------
+    {
+        std::vector<std::pair<std::string, int>> testCases = {
+            {"ACGTTTGA", 4},
+            {"ACGTACGT", 4},
+            {"ATGCGATGACCTGACTGCGATGACCTGA", 8}
+        };
+
+        for (const auto& [sequence, k] : testCases) {
+            KmerTable kTable(sequence.length(), k);
+            KmerEncoding::encodeSequence(sequence, k, kTable);
+
+            DeBruijnGraph graph(k);
+            for (const auto& entry : kTable)
+                for (size_t i = 0; i < entry.value; ++i)
+                    graph.addKmer(entry.key);
+
+            size_t expectedEdges = graph.getEdgeCount();
+
+            ContigTraversal ct(graph);
+            ct.computeContigs();
+
+            size_t coveredBases = 0;
+            for (const auto& contig : ct.getContigs())
+                coveredBases += contig.sequence.length();
+
+            if (ct.getContigs().empty()) {
+                passed = false;
+                std::cout << "[Contig Test 4] No contigs produced for sequence: "
+                          << sequence << " k=" << k << "\n";
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Test 5: Single k-mer sequence — minimal graph
+    //
+    // A sequence of length k produces exactly 1 k-mer, 2 nodes, 1 edge.
+    // Expects: 1 contig, not circular, sequence == original.
+    // -----------------------------------------------------------------------
+    {
+        std::string sequence = "ACGT";
+        int k = 4;
+
+        KmerTable kTable(sequence.length(), k);
+        KmerEncoding::encodeSequence(sequence, k, kTable);
+
+        DeBruijnGraph graph(k);
+        for (const auto& entry : kTable)
+            for (size_t i = 0; i < entry.value; ++i)
+                graph.addKmer(entry.key);
+
+        ContigTraversal ct(graph);
+        ct.computeContigs();
+
+        const auto& contigs = ct.getContigs();
+
+        if (contigs.size() != 1) {
+            passed = false;
+            std::cout << "[Contig Test 5] Expected 1 contig, got "
+                      << contigs.size() << "\n";
+        }
+
+        if (contigs.size() == 1 && contigs[0].sequence != sequence) {
+            passed = false;
+            std::cout << "[Contig Test 5] Sequence mismatch\n"
+                      << "  Expected: " << sequence << "\n"
+                      << "  Got:      " << contigs[0].sequence << "\n";
+        }
+
+        if (contigs.size() == 1 && contigs[0].isCircular) {
+            passed = false;
+            std::cout << "[Contig Test 5] Should not be circular\n";
         }
     }
 

@@ -239,7 +239,7 @@ static void reportResults(const DNASequence& original, const std::string& assemb
 int main() {
 
     try {
-        //const std::string path = "../Data/[6]Escherichia coli str. K-12 substr..fna";
+        //const std::string path = "../Data/[6]Escherichia coli str. K-12 substr.fna";
         //const std::string path = "../Data/small_test.fna";
         const std::string path = "../Data/[1]Escherichia phage phiX174.fna"; // Size 5386
         //const std::string path = "../Data/[4]Saccharomyces cerevisiae S288C chromosome I.fna"; // Size 230218

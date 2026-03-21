@@ -27,11 +27,18 @@ static DNASequence loadGenome(const std::string& path) {
     return *genomeOpt;
 }
 
-static DeBruijnGraph buildGraph(const std::string& sequence, int k) {
-    std::string circularSequence = sequence + sequence.substr(0, k - 1);
+static DeBruijnGraph buildGraph(const std::string& sequence, int k, bool circular = false) {
+    std::cout << "DEBUG: building graph with k=" << k << "\n";
 
-    KmerTable kTable(circularSequence.length(), k);
-    KmerEncoding::encodeSequence(circularSequence, k, kTable);
+
+    std::string inputSequence = circular
+        ? sequence + sequence.substr(0, k - 1)
+        : sequence;
+    std::cout << "Input sequence: " << inputSequence << "\n";
+    std::cout << "Input length:   " << inputSequence.length() << "\n";
+
+    KmerTable kTable(inputSequence.length(), k);
+    KmerEncoding::encodeSequence(inputSequence, k, kTable);
     std::cout << "Unique k-mers:   " << kTable.getNumItems() << "\n";
 
     DeBruijnGraph graph(k, kTable.getNumItems() * 2);
@@ -42,15 +49,41 @@ static DeBruijnGraph buildGraph(const std::string& sequence, int k) {
     std::cout << "Graph built:     " << graph.getNodeCount() << " nodes, "
               << graph.getEdgeCount() << " edges\n";
 
+    size_t repeated = 0;
+    size_t maxCount = 0;
+    for (const auto& entry : kTable) {
+        if (entry.value > 1) ++repeated;
+        if (entry.value > maxCount) maxCount = entry.value;
+    }
+    std::cout << "Repeated k-mers:  " << repeated << "\n";
+    std::cout << "Max k-mer count:  " << maxCount << "\n";
+
+
     return graph;
 }
 
-static void assembleContigs(DeBruijnGraph& graph, bool overlap) {
+static void assembleContigs(DeBruijnGraph& graph, DNASequence sequence, int k) {
     ContigTraversal ct(graph);
-    if (overlap)
-        ct.setOverlap(true);
     ct.computeContigs();
-    ct.printStats();
+    // After computeContigs(), concatenate all contig sequences
+    // and verify they cover the original
+    std::string reconstruction = "";
+    for (const auto& contig : ct.getContigs()) {
+        reconstruction += contig.sequence;
+    }
+    std::cout << "Original:       " << sequence.getSequence() << "\n";
+    std::cout << "Reconstructed:  " << reconstruction << "\n";
+    std::cout << "Length match:   " << (reconstruction == sequence.getSequence() ? "YES" : "NO") << "\n";    ct.printStats();
+
+    for (const auto& contig : ct.getContigs()) {
+        std::cout << "  [" << contig.sequence << "] "
+                  << "start=" << KmerEncoding::decode(contig.startNode, k-1)
+                  << " end=" << KmerEncoding::decode(contig.endNode, k-1)
+                  << " circular=" << contig.isCircular << "\n";
+    }
+
+    std::cout << "--------------------------------------\n";
+    std::cout << "\n";
 }
 
 // -----------------------------------------------------------------------
@@ -59,21 +92,26 @@ static void assembleContigs(DeBruijnGraph& graph, bool overlap) {
 
 int main() {
     try {
-        const std::string path = "../Data/" + sequence[6];
+        const std::string path = "../Data/" + sequence[7];
 
-
-        // Stage 1: Load
         DNASequence genome = loadGenome(path);
         std::cout << genome.getName() << "\n";
         std::cout << "Sequence length: " << genome.getLength() << " bases\n";
 
-        // Stage 2: Build
-        int k = 63;
-        std::cout << "Kmer size: " << k << "\n";
-        DeBruijnGraph graph = buildGraph(genome.getSequence(), k);
+        for (int k : {4, 8, 16}) {
+            std::cout << "Kmer size: " << k << "\n";
+            DeBruijnGraph graph = buildGraph(genome.getSequence(), k, false);
 
-        // Stage 3 & 4: Assemble and report
-        assembleContigs(graph, false);
+            // Debug: print all node degrees
+            for (NodeId node : graph.getAllNodes()) {
+                const auto* data = graph.findNode(node);
+                std::cout << KmerEncoding::decode(node, graph.getK() - 1)
+                          << " in=" << data->getInDegree()
+                          << " out=" << data->getOutDegree() << "\n";
+            }
+
+            assembleContigs(graph, genome, k);
+        }
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << "\n";

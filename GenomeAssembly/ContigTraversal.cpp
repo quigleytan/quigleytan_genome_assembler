@@ -1,108 +1,129 @@
 #include "ContigTraversal.h"
+
 #include <algorithm>
 #include <iostream>
 
-// PRIVATE
+#include "DataProcessing/KmerEncoding.h"
+
+// PRIVATE HELPER FUNCTIONS
 
 void ContigTraversal::initializeAdjacency() {
-    adjCopy_ = OpenAddressingTable<NodeId, std::vector<NodeId>>(graph_.getNodeCount() * 2);
+    // Pre-allocates size to adjCopy_ to avoid rehashing pointer failure.
+    adjCopy_ = OpenAddressingTable<NodeId, std::vector<NodeId>>(
+        graph_.getNodeCount() * 2);
 
+    // Inserts and sorts each neighbor list to adjCopy_.
     for (NodeId node : graph_.getAllNodes()) {
         const auto* data = graph_.findNode(node);
         auto [neighborRef, isNew] = adjCopy_.insert(node);
         neighborRef = data->getNeighbors();
+        std::sort(neighborRef.begin(), neighborRef.end());
     }
 }
 
 bool ContigTraversal::isAmbiguous(NodeId node) const {
     const auto* data = graph_.findNode(node);
-    return data->getInDegree() != 1 || data->getOutDegree() != 1;
+    return data->getInDegree() > 1 || data->getOutDegree() > 1;
 }
 
-std::string ContigTraversal::walkContig(NodeId startNode) {
-    auto* neighbors = adjCopy_.find(startNode);
-    if (!neighbors || neighbors->empty()) return "";
+ContigTraversal::Contig ContigTraversal::walkContig(NodeId startNode) {
+    Contig result;
+    result.startNode = startNode;
+    result.isCircular = false;
 
-    NodeId firstStep = neighbors->back();
-    neighbors->pop_back();
+    const size_t nodeLen = graph_.getK() - 1;
+    result.sequence = KmerEncoding::decode(startNode, nodeLen);
 
-    // each node contributes exactly 1 new base in non-overlap mode
-    std::string result;
-    result += KmerEncoding::decode(firstStep, graph_.getK() - 1).back();
-    NodeId currentNode = firstStep;
-
-    if (isAmbiguous(firstStep)) return result;
+    NodeId current = startNode;
 
     while (true) {
-        auto* nextNeighbors = adjCopy_.find(currentNode);
-        if (!nextNeighbors || nextNeighbors->empty()) break;
+        auto* neighbors = adjCopy_.find(current);
+        if (!neighbors || neighbors->empty()) {
+            result.endNode = current;
+            break;
+        }
 
-        NodeId next = nextNeighbors->back();
-        nextNeighbors->pop_back();
+        NodeId next = neighbors->back();
+        neighbors->pop_back();
 
-        // always append the new base since we consumed the edge
-        result += KmerEncoding::decode(next, graph_.getK() - 1).back();
+        // Circularity detection, walked around back to the start node.
+        if (next == startNode) {
+            result.endNode = startNode;
+            result.isCircular = true;
+            size_t overlap = nodeLen - 1;
+            if (result.sequence.length() > overlap)
+                result.sequence.resize(result.sequence.length() - overlap); // Trims the k-2 circular join overlap.
+            break;
+        }
 
-        if (isAmbiguous(next)) break;
-        currentNode = next;
+        // Appending the last char of the next node
+        result.sequence += KmerEncoding::decode(next, nodeLen).back();
+
+        // Boundary detection - Checks for convergence/divergence and sink (end) nodes.
+        const auto* nextData = graph_.findNode(next);
+        bool isBoundary = nextData->getInDegree() > 1  ||
+                          nextData->getOutDegree() > 1 ||
+                          nextData->getOutDegree() == 0;
+        if (isBoundary) { // Terminates the walk for the node.
+            result.endNode = next;
+            break;
+        }
+        current = next;
     }
-
     return result;
 }
 
 void ContigTraversal::handleIsolatedCycles() {
     for (NodeId node : graph_.getAllNodes()) {
-        auto* neighbors = adjCopy_.find(node);
+        // Checks for ambiguity - skips if ambiguous.
+        if (isAmbiguous(node)) continue;
+
+        auto* neighbors = adjCopy_.find(node); // Retrieves the neighbor list for this node.
+
         while (neighbors && !neighbors->empty()) {
-            std::string contig = walkContig(node);
-            contigs_.push_back(contig);
+            Contig contig = walkContig(node);
+
+            if (!contig.sequence.empty())
+                contigs_.push_back(std::move(contig));
         }
     }
 }
 
 // PUBLIC
 
-// Constructor
-ContigTraversal::ContigTraversal(DeBruijnGraph& g) : graph_(g),
-    adjCopy_(g.getNodeCount() * 2), overlap_(false) {}
+ContigTraversal::ContigTraversal(DeBruijnGraph& g)
+    : graph_(g), adjCopy_(g.getNodeCount() * 2) {}
 
 void ContigTraversal::computeContigs() {
+    // Preparing data structures.
     contigs_.clear();
     initializeAdjacency();
 
-    size_t branchPoints = 0;
-    size_t branchContigs = 0;
-
+    // Phase 1 - General contig walks.
     for (NodeId node : graph_.getAllNodes()) {
-        if (isAmbiguous(node)) {
-            branchPoints++;
-            auto* neighbors = adjCopy_.find(node);
-            while (neighbors && !neighbors->empty()) {
-                std::string contig = walkContig(node);
-                contigs_.push_back(contig);
-                branchContigs++;
+        const auto* data = graph_.findNode(node);
 
+        bool isBranchPoint = data->getInDegree() > 1 || data->getOutDegree() > 1;
+        bool isSource      = data->getInDegree() == 0 && data->getOutDegree() >= 1;
+
+        if (!isBranchPoint && !isSource) continue; // Skips nodes that are not unitig boundaries.
+
+        auto* neighbors = adjCopy_.find(node);
+
+        while (neighbors && !neighbors->empty()) {
+            Contig contig = walkContig(node);
+
+            if (!contig.sequence.empty()) {
+                contigs_.push_back(std::move(contig));
             }
         }
     }
 
-    std::cout << "Branch points found: " << branchPoints << "\n";
-    std::cout << "Branch contigs:      " << branchContigs << "\n";
-
+    // Phase 2 - Closed loop handling.
     handleIsolatedCycles();
-
-    std::cout << "Total after cycles:  " << contigs_.size() << "\n";
 }
 
-void ContigTraversal::setOverlap(bool logical) {
-    overlap_ = logical;
-}
-
-bool ContigTraversal::getOverlap() const {
-    return overlap_;
-}
-
-const std::vector<std::string>& ContigTraversal::getContigs() const {
+const std::vector<ContigTraversal::Contig>& ContigTraversal::getContigs() const {
     return contigs_;
 }
 
@@ -112,55 +133,37 @@ void ContigTraversal::printStats() const {
         return;
     }
 
+    // Initializing reporting variables.
     size_t totalLength = 0;
+    size_t circularCount = 0;
     std::vector<size_t> lengths;
     lengths.reserve(contigs_.size());
 
+    // Length calculation.
     for (const auto& contig : contigs_) {
-        size_t len = contig.length();
+        size_t len = contig.sequence.length();
         lengths.push_back(len);
         totalLength += len;
+        if (contig.isCircular) ++circularCount;
     }
 
-    auto [minIt, maxIt] = std::minmax_element(lengths.begin(), lengths.end());
-    size_t minLen = *minIt;
-    size_t maxLen = *maxIt;
+    // Sorting lengths vector for N50 calculation.
     std::sort(lengths.rbegin(), lengths.rend());
 
     size_t half = (totalLength + 1) / 2;
     size_t accumulated = 0;
     size_t n50 = 0;
-
     for (size_t len : lengths) {
         accumulated += len;
-        if (accumulated >= half) {
-            n50 = len;
-            break;
-        }
+        if (accumulated >= half) { n50 = len; break; }
     }
 
     std::cout << "--------------------------------------\n";
-    std::cout << "Overlap:          " << (overlap_ ? "TRUE" : "FALSE") << "\n";
     std::cout << "Total contigs:    " << contigs_.size() << "\n";
+    std::cout << "Circular contigs: " << circularCount << "\n";
     std::cout << "Total bases:      " << totalLength << "\n";
-    std::cout << "Shortest contig:  " << minLen << " bases\n";
-    std::cout << "Longest contig:   " << maxLen << " bases\n";
+    std::cout << "Shortest contig:  " << lengths.back() << " bases\n";
+    std::cout << "Longest contig:   " << lengths.front() << " bases\n";
     std::cout << "N50:              " << n50 << " bases\n";
     std::cout << "--------------------------------------\n";
-
-    size_t len1 = 0, len2 = 0, lenk = 0, longer = 0;
-    for (const auto& c : contigs_) {
-        if (c.length() == 1) len1++;
-        else if (c.length() == 2) len2++;
-        else if (c.length() < graph_.getK()) lenk++;
-        else longer++;
-    }
-    std::cout << "Length 1:    " << len1 << "\n";
-    std::cout << "Length 2:    " << len2 << "\n";
-    std::cout << "Length 2-63: " << lenk << "\n";
-    std::cout << "Length 63+:  " << longer << "\n";
-
-    std::cout << "Genome length:    " << graph_.getEdgeCount() << "\n";
-    std::cout << "Total bases:      " << totalLength << "\n";
-    std::cout << "Difference:       " << graph_.getEdgeCount() - totalLength << "\n";
 }
