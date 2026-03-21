@@ -241,10 +241,9 @@ int main() {
     try {
         //const std::string path = "../Data/Escherichia coli str. K-12 substr..fna";
         //const std::string path = "../Data/small_test.fna";
-        //const std::string path = "../Data/Escherichia_phage_phiX174.fna"; // Size 5386
+        const std::string path = "../Data/Escherichia_phage_phiX174.fna"; // Size 5386
         //const std::string path = "../Data/Saccharomyces cerevisiae S288C chromosome I.fna"; // Size 230218
         //const std::string path = "../Data/Mycoplasma_genitalium_G37.fna";
-        const std::string path = "../Data/Escherichia_phage_Lambda.fna";
 
         // Stage 1: Load
         DNASequence genome = loadGenome(path);
