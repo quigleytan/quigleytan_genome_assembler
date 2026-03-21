@@ -32,6 +32,7 @@ add_executable(ContigAssembly
         DataProcessing/KmerEncoding.cpp
         GenomeAssembly/DeBruijnGraph.cpp
         GenomeAssembly/ContigTraversal.cpp
+        Data/DataList.cpp
         KmerTypes.h
 )
 

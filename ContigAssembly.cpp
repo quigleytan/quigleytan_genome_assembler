@@ -45,8 +45,10 @@ static DeBruijnGraph buildGraph(const std::string& sequence, int k) {
     return graph;
 }
 
-static void assembleContigs(DeBruijnGraph& graph) {
+static void assembleContigs(DeBruijnGraph& graph, bool overlap) {
     ContigTraversal ct(graph);
+    if (overlap)
+        ct.setOverlap(true);
     ct.computeContigs();
     ct.printStats();
 }
@@ -57,7 +59,8 @@ static void assembleContigs(DeBruijnGraph& graph) {
 
 int main() {
     try {
-        const std::string path = sequence[1];
+        const std::string path = "../Data/" + sequence[6];
+
 
         // Stage 1: Load
         DNASequence genome = loadGenome(path);
@@ -65,12 +68,12 @@ int main() {
         std::cout << "Sequence length: " << genome.getLength() << " bases\n";
 
         // Stage 2: Build
-        int k = 35;
+        int k = 63;
         std::cout << "Kmer size: " << k << "\n";
         DeBruijnGraph graph = buildGraph(genome.getSequence(), k);
 
         // Stage 3 & 4: Assemble and report
-        assembleContigs(graph);
+        assembleContigs(graph, false);
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << "\n";

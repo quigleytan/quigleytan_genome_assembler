@@ -12,9 +12,10 @@ class ContigTraversal {
 
 private:
 
-    DeBruijnGraph& graph;
-    OpenAddressingTable<NodeId, std::vector<NodeId>> adjCopy;
-    std::vector<std::string> contigs;
+    DeBruijnGraph& graph_;
+    OpenAddressingTable<NodeId, std::vector<NodeId>> adjCopy_;
+    std::vector<std::string> contigs_;
+    bool overlap_ = false;
 
     void initializeAdjacency();
 
@@ -29,6 +30,10 @@ public:
     explicit ContigTraversal(DeBruijnGraph& g);
 
     void computeContigs();
+
+    void setOverlap(bool logical);
+
+    bool getOverlap() const;
 
     [[nodiscard]] const std::vector<std::string>& getContigs() const;
 
