@@ -14,7 +14,7 @@ add_executable(MainGenomeAssembly
         KmerTypes.h
 )
 
-add_executable(EulerianTraversal
+add_executable(EulerianAssembly
         EulerianAssembly.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
@@ -25,16 +25,14 @@ add_executable(EulerianTraversal
         KmerTypes.h
 )
 
-add_executable(ContigTraversal
+add_executable(ContigAssembly
+        ContigAssembly.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
         DataProcessing/KmerEncoding.cpp
         GenomeAssembly/DeBruijnGraph.cpp
-        GenomeAssembly/EulerianTraversal.h
-        GenomeAssembly/EulerianTraversal.cpp
-        GenomeAssembly/ContigTraversal.h
-        KmerTypes.h
         GenomeAssembly/ContigTraversal.cpp
+        KmerTypes.h
 )
 
 add_executable(InitializationTests
@@ -62,12 +60,15 @@ add_executable(AssemblyTests
         KmerTypes.h
         GenomeAssembly/ContigTraversal.h
         GenomeAssembly/ContigTraversal.cpp
+        Data/DataList.h
+        Data/DataList.cpp
 )
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 
 target_include_directories(MainGenomeAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
-target_include_directories(EulerianTraversal PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(EulerianAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(ContigAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(InitializationTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(ProcessingTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(AssemblyTests PRIVATE ${PROJECT_INCLUDE_DIR})
