@@ -40,13 +40,10 @@ std::string ContigTraversal::walkContig(NodeId startNode) {
         NodeId next = nextNeighbors->back();
         nextNeighbors->pop_back();
 
-        if (isAmbiguous(next)) {
-            if (overlap_)
-                result += KmerEncoding::decode(next, graph_.getK() - 1).back();
-            break;
-        }
-
+        // always append the new base since we consumed the edge
         result += KmerEncoding::decode(next, graph_.getK() - 1).back();
+
+        if (isAmbiguous(next)) break;
         currentNode = next;
     }
 
