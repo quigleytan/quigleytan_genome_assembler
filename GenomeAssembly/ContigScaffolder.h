@@ -3,7 +3,11 @@
  * Created by Tanner Quigley on [date]
  * Summary:
  * - Orders contigs into scaffolds using shared boundary node relationships.
+ * - Supports multiple branch resolution strategies for comparison.
  * Important notes:
+ * - Operates on contigs produced by ContigTraversal.
+ * - Scaffolds are ordered lists of contig indices with gap estimates.
+ * - Ambiguous branch points are handled according to BranchResolution strategy.
  */
 
 #ifndef CONTIG_SCAFFOLDER_H
@@ -16,13 +20,6 @@
 #include "GenomeAssembly/ContigTraversal.h"
 #include "DataProcessing/OpenAddressingTable.h"
 
-// -----------------------------------------------------------------------
-// Resolution strategy
-// -----------------------------------------------------------------------
-
-// -----------------------------------------------------------------------
-// Resolution strategy
-// -----------------------------------------------------------------------
 
 enum class ScoringMetric {
     Length,         // Score by contig sequence length
@@ -42,11 +39,46 @@ struct ScoringWeights {
     static ScoringWeights combined()     { return {0.4, 0.4, 0.2}; }
 };
 
+struct ResolutionStrategy {
+    bool skipAmbiguous = false;  // If true, stop at ambiguous nodes
+    // regardless of scoring
+    ScoringWeights weights;      // Scoring weights for branch resolution
+
+    // Convenience presets
+    static ResolutionStrategy skip() {
+        ResolutionStrategy s;
+        s.skipAmbiguous = true;
+        return s;
+    }
+
+    static ResolutionStrategy greedy() {
+        ResolutionStrategy s;
+        s.skipAmbiguous = false;
+        s.weights = ScoringWeights::lengthOnly();
+        return s;
+    }
+
+    static ResolutionStrategy scored() {
+        ResolutionStrategy s;
+        s.skipAmbiguous = false;
+        s.weights = ScoringWeights::combined();
+        return s;
+    }
+};
+
+// -----------------------------------------------------------------------
+// Scaffold entry — one contig's position within a scaffold
+// -----------------------------------------------------------------------
+
 struct ScaffoldEntry {
     size_t contigIndex; // Index into the contigs vector
     int gapAfter;       // Estimated gap in bases between this contig
                         // and the next. -1 = unknown, 0 = direct overlap
 };
+
+// -----------------------------------------------------------------------
+// Scaffold — ordered sequence of contigs
+// -----------------------------------------------------------------------
 
 struct Scaffold {
     std::vector<ScaffoldEntry> entries;
@@ -55,9 +87,14 @@ struct Scaffold {
     [[nodiscard]] size_t contigCount() const { return entries.size(); }
 };
 
+// -----------------------------------------------------------------------
+// Scaffolder class
+// -----------------------------------------------------------------------
+
 class ContigScaffolder {
 
 private:
+
     const std::vector<ContigTraversal::Contig>& contigs_;
     const DeBruijnGraph& graph_;
     std::vector<Scaffold> scaffolds_;
@@ -135,18 +172,16 @@ public:
      * @brief Constructor for ContigScaffolder.
      * @param contigs  Contigs produced by ContigTraversal.
      * @param graph    DeBruijnGraph used to build the contigs.
-     * @param strategy Branch resolution strategy to use.
      */
     ContigScaffolder(const std::vector<ContigTraversal::Contig>& contigs,
-                     const DeBruijnGraph& graph,
-                     BranchResolution strategy = BranchResolution::Skip);
+                     const DeBruijnGraph& graph);
 
     /**
      * @brief Builds all scaffolds from the contig connection map.
      *
-     * Phase 1: Builds a connection map from contig boundary nodes.
-     * Phase 2: Walks from all scaffold entry points producing linear scaffolds.
-     * Phase 3: Handles any remaining unvisited contigs as isolated scaffolds
+     * Phase 1: builds connection map from contig boundary nodes.
+     * Phase 2: walks from all scaffold entry points producing linear scaffolds.
+     * Phase 3: handles any remaining unvisited contigs as isolated scaffolds
      *          or circular scaffolds with no external entry point.
      */
     void buildScaffolds();
