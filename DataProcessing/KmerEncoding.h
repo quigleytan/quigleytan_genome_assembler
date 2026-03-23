@@ -31,6 +31,10 @@ private:
      */
     static NodeId encodeBase(char base);
 
+public:
+
+    static constexpr size_t MAX_K_128 = 63;
+
     /**
      * @brief Rolls the previous k-mer to create the next k-mer by adding a new base.
      *
@@ -44,10 +48,6 @@ private:
      * @return 2-bit encoded next kmer as __uint128_t.
      */
     static NodeId roll(NodeId prev, char next, size_t k);
-
-public:
-
-    static constexpr size_t MAX_K_128 = 63;
 
     /**
      * @brief Validates that k is a usable kmer size for the graph.

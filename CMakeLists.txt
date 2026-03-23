@@ -57,6 +57,7 @@ add_executable(AssemblyTests
         GenomeAssembly/ContigTraversal.cpp
         DataList.cpp
         GenomeAssembly/ContigScaffolder.h
+        GenomeAssembly/ContigScaffolder.cpp
 )
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})

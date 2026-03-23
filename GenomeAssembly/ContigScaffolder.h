@@ -1,13 +1,15 @@
 /*
  * ContigScaffolder.h
- * Created by Tanner Quigley on [date]
+ * Created by Tanner Quigley
  * Summary:
  * - Orders contigs into scaffolds using shared boundary node relationships.
  * - Supports multiple branch resolution strategies for comparison.
  * Important notes:
  * - Operates on contigs produced by ContigTraversal.
  * - Scaffolds are ordered lists of contig indices with gap estimates.
- * - Ambiguous branch points are handled according to BranchResolution strategy.
+ * - Ambiguous branch points are handled according to ResolutionStrategy.
+ * - KmerFrequency and OverlapQuality scoring require an optional KmerTable.
+ *   If none is provided, those metrics are skipped and weight falls to Length.
  */
 
 #ifndef CONTIG_SCAFFOLDER_H
@@ -15,39 +17,37 @@
 
 #include <vector>
 #include <string>
+
 #include "KmerTypes.h"
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "GenomeAssembly/ContigTraversal.h"
+#include "DataProcessing/KmerTable.h"
 #include "DataProcessing/OpenAddressingTable.h"
 
-
-enum class ScoringMetric {
-    Length,         // Score by contig sequence length
-    KmerFrequency,  // Score by average k-mer frequency in the contig
-    OverlapQuality, // Score by overlap match quality at boundary node
-    Combined        // Weighted combination of all metrics
-};
+// SCORING WEIGHT CONFIGURATIONS
 
 struct ScoringWeights {
-    double lengthWeight        = 1.0;
-    double kmerFrequencyWeight = 0.0;
+    double lengthWeight         = 1.0;
+    double kmerFrequencyWeight  = 0.0;
     double overlapQualityWeight = 0.0;
 
     // Convenience presets
-    static ScoringWeights lengthOnly()   { return {1.0, 0.0, 0.0}; }
-    static ScoringWeights frequencyOnly(){ return {0.0, 1.0, 0.0}; }
-    static ScoringWeights combined()     { return {0.4, 0.4, 0.2}; }
+    static ScoringWeights lengthOnly()    { return {1.0, 0.0, 0.0}; }
+    static ScoringWeights frequencyOnly() { return {0.0, 1.0, 0.0}; }
+    static ScoringWeights combined()      { return {0.4, 0.4, 0.2}; }
 };
 
+// RESOLUTION STRATEGY HANDLING
+
 struct ResolutionStrategy {
-    bool skipAmbiguous = false;  // If true, stop at ambiguous nodes
-    // regardless of scoring
-    ScoringWeights weights;      // Scoring weights for branch resolution
+    bool skipAmbiguous = true;
+    ScoringWeights weights;
 
     // Convenience presets
     static ResolutionStrategy skip() {
         ResolutionStrategy s;
         s.skipAmbiguous = true;
+        s.weights = ScoringWeights::lengthOnly();
         return s;
     }
 
@@ -66,19 +66,21 @@ struct ResolutionStrategy {
     }
 };
 
-// -----------------------------------------------------------------------
-// Scaffold entry — one contig's position within a scaffold
-// -----------------------------------------------------------------------
+// SCAFFOLD ENTRY STRUCT
 
 struct ScaffoldEntry {
+    static constexpr int UNKNOWN_GAP = -1;
+    static constexpr int DIRECT_OVERLAP = 0;
+
+    static constexpr int NOT_APPLICABLE = -1;
+
     size_t contigIndex; // Index into the contigs vector
-    int gapAfter;       // Estimated gap in bases between this contig
-                        // and the next. -1 = unknown, 0 = direct overlap
+    int gapAfter;       // Bases between this contig and the next.
+                        // UNKNOWN_GAP (-1) = unresolved, DIRECT_OVERLAP (0) = direct overlap
+    int score = NOT_APPLICABLE;          // NOT_APPLICABLE (-1)
 };
 
-// -----------------------------------------------------------------------
-// Scaffold — ordered sequence of contigs
-// -----------------------------------------------------------------------
+// SCAFFOLD STRUCT
 
 struct Scaffold {
     std::vector<ScaffoldEntry> entries;
@@ -87,9 +89,7 @@ struct Scaffold {
     [[nodiscard]] size_t contigCount() const { return entries.size(); }
 };
 
-// -----------------------------------------------------------------------
-// Scaffolder class
-// -----------------------------------------------------------------------
+// SCAFFOLDER CLASS
 
 class ContigScaffolder {
 
@@ -97,11 +97,12 @@ private:
 
     const std::vector<ContigTraversal::Contig>& contigs_;
     const DeBruijnGraph& graph_;
+    const KmerTable* kmerTable_;
+    size_t maxContigLength_ = 0;
+    ResolutionStrategy strategy_;
     std::vector<Scaffold> scaffolds_;
 
-    // Connection maps built from contig boundary nodes.
-    // Both maps use vectors of indices to handle multiple contigs
-    // sharing the same boundary node at branch points.
+    // Connection maps
     OpenAddressingTable<NodeId, std::vector<size_t>> endNodeMap_;
     OpenAddressingTable<NodeId, std::vector<size_t>> startNodeMap_;
 
@@ -114,14 +115,21 @@ private:
      */
     void buildConnectionMap();
 
+    [[nodiscard]] double computeLengthScore(const ContigTraversal::Contig& contig) const;
+
+    [[nodiscard]] double computeFrequencyScore(const ContigTraversal::Contig& contig) const;
+
+    [[nodiscard]] double computeOverlapScore(const ContigTraversal::Contig& contig) const;
+
     /**
      * @brief Scores a candidate contig for branch resolution.
      *
-     * Computes a weighted score from the enabled metrics in strategy_.weights.
-     * Higher score = more likely to be the correct next contig.
+     * Computes a weighted score using strategy_.weights. Metrics requiring
+     * kmerTable_ are skipped if kmerTable_ is null, and their weight is
+     * redistributed to the Length metric.
      *
      * @param contigIndex Index of the candidate contig.
-     * @return Weighted score for this contig.
+     * @return Weighted score — higher means more likely to be the correct next contig.
      */
     [[nodiscard]] double scoreContig(size_t contigIndex) const;
 
@@ -129,23 +137,22 @@ private:
      * @brief Resolves the next contig index from a given boundary node.
      *
      * If strategy_.skipAmbiguous is true and more than one contig starts
-     * at boundaryNode, returns npos. Otherwise scores all candidates using
-     * scoreContig() and returns the highest scoring unvisited contig.
+     * at boundaryNode, returns npos. Otherwise scores all unvisited candidates
+     * using scoreContig() and returns the highest scoring one.
      *
      * @param boundaryNode The endNode of the current contig.
      * @param visited      Tracks which contigs are already assigned.
      * @return Index into contigs_ of the next contig, or npos if unresolvable.
      */
-    [[nodiscard]] size_t resolveNext(NodeId boundaryNode,
-                                     const std::vector<bool>& visited) const;
+    [[nodiscard]] size_t resolveNext(NodeId boundaryNode, const std::vector<bool>& visited) const;
 
     /**
      * @brief Walks the connection map from startIndex to build one scaffold.
      *
-     * Follows endNode → startNode links greedily until a dead end,
-     * ambiguous branch point, or already-visited contig is reached.
-     * Each step appends a ScaffoldEntry with gapAfter = 0 for direct
-     * overlaps and gapAfter = -1 for unresolved terminations.
+     * Follows endNode -> startNode links until a dead end, ambiguous branch
+     * point (if skipAmbiguous), or already-visited contig is reached.
+     * Each step appends a ScaffoldEntry with gapAfter = DIRECT_OVERLAP for
+     * connected contigs and gapAfter = UNKNOWN_GAP at unresolved terminations.
      *
      * @param startIndex Index of the contig to begin the scaffold from.
      * @param visited    Tracks which contigs are already assigned.
@@ -155,11 +162,11 @@ private:
                                         std::vector<bool>& visited) const;
 
     /**
-     * @brief Returns true if a contig is a scaffold entry point.
+     * @brief Returns true if a contig is a valid scaffold entry point.
      *
-     * A contig is a valid entry point if its startNode has no incoming
-     * contigs in endNodeMap_ — i.e. nothing ends where it begins.
-     * These are the natural starting points for linear scaffolds.
+     * A contig qualifies if its startNode has no entries in endNodeMap_,
+     * meaning no other contig ends where this one begins. These are the
+     * natural starting points for linear scaffolds.
      *
      * @param contigIndex Index of the contig to check.
      * @return True if no other contig ends at this contig's startNode.
@@ -170,19 +177,24 @@ public:
 
     /**
      * @brief Constructor for ContigScaffolder.
-     * @param contigs  Contigs produced by ContigTraversal.
-     * @param graph    DeBruijnGraph used to build the contigs.
+     *
+     * @param contigs    Contigs produced by ContigTraversal.
+     * @param graph      DeBruijnGraph used to build the contigs.
+     * @param strategy   Branch resolution strategy (default: ResolutionStrategy::skip()).
+     * @param kmerTable  Optional KmerTable for frequency-based scoring. Pass nullptr to disable.
      */
     ContigScaffolder(const std::vector<ContigTraversal::Contig>& contigs,
-                     const DeBruijnGraph& graph);
+                     const DeBruijnGraph& graph,
+                     ResolutionStrategy strategy = ResolutionStrategy::skip(),
+                     const KmerTable* kmerTable = nullptr);
 
     /**
      * @brief Builds all scaffolds from the contig connection map.
      *
-     * Phase 1: builds connection map from contig boundary nodes.
-     * Phase 2: walks from all scaffold entry points producing linear scaffolds.
-     * Phase 3: handles any remaining unvisited contigs as isolated scaffolds
-     *          or circular scaffolds with no external entry point.
+     * Phase 1: Builds a connection map from contig boundary nodes.
+     * Phase 2: Walks from all scaffold entry points, producing linear scaffolds.
+     * Phase 3: Handles any remaining unvisited contigs as isolated or circular
+     *          scaffolds with no external entry point.
      */
     void buildScaffolds();
 
@@ -195,11 +207,11 @@ public:
     /**
      * @brief Reports scaffolding statistics to stdout.
      *
-     * Strategy:           Resolution strategy used.
+     * Strategy:           Resolution strategy used (skip / greedy / scored).
      * Total scaffolds:    Number of scaffolds produced.
      * Circular scaffolds: Number of scaffolds forming a closed loop.
      * Longest scaffold:   Length in bases of the longest scaffold.
-     * Unresolved gaps:    Number of gaps with unknown size (-1).
+     * Unresolved gaps:    Number of gaps with UNKNOWN_GAP size.
      * N50:                Scaffold-level N50.
      */
     void printStats() const;

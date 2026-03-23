@@ -4,6 +4,9 @@
 
 #include "CustomExceptions/DNASequenceException.h"
 
+
+// PRIVATE
+
 NodeId KmerEncoding::encodeBase(char base) {
     // Assigning 2-bit values to each base
     switch (base) {
@@ -14,6 +17,8 @@ NodeId KmerEncoding::encodeBase(char base) {
         default: throw DNASequenceException("Invalid base");
     }
 }
+
+// PUBLIC
 
 // Rolls the previous k-mer to get the next one
 NodeId KmerEncoding::roll(NodeId prev, char next, size_t k) {
