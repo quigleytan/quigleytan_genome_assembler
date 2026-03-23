@@ -3,11 +3,7 @@
  * Created by Tanner Quigley on [date]
  * Summary:
  * - Orders contigs into scaffolds using shared boundary node relationships.
- * - Supports multiple branch resolution strategies for comparison.
  * Important notes:
- * - Operates on contigs produced by ContigTraversal.
- * - Scaffolds are ordered lists of contig indices with gap estimates.
- * - Ambiguous branch points are handled according to BranchResolution strategy.
  */
 
 #ifndef CONTIG_SCAFFOLDER_H
@@ -24,24 +20,33 @@
 // Resolution strategy
 // -----------------------------------------------------------------------
 
-enum class BranchResolution {
-    Skip,    // Stop at ambiguous branch points, report gap as unknown
-    Greedy   // Pick the longest outgoing contig at branch points
+// -----------------------------------------------------------------------
+// Resolution strategy
+// -----------------------------------------------------------------------
+
+enum class ScoringMetric {
+    Length,         // Score by contig sequence length
+    KmerFrequency,  // Score by average k-mer frequency in the contig
+    OverlapQuality, // Score by overlap match quality at boundary node
+    Combined        // Weighted combination of all metrics
 };
 
-// -----------------------------------------------------------------------
-// Scaffold entry — one contig's position within a scaffold
-// -----------------------------------------------------------------------
+struct ScoringWeights {
+    double lengthWeight        = 1.0;
+    double kmerFrequencyWeight = 0.0;
+    double overlapQualityWeight = 0.0;
+
+    // Convenience presets
+    static ScoringWeights lengthOnly()   { return {1.0, 0.0, 0.0}; }
+    static ScoringWeights frequencyOnly(){ return {0.0, 1.0, 0.0}; }
+    static ScoringWeights combined()     { return {0.4, 0.4, 0.2}; }
+};
 
 struct ScaffoldEntry {
     size_t contigIndex; // Index into the contigs vector
     int gapAfter;       // Estimated gap in bases between this contig
                         // and the next. -1 = unknown, 0 = direct overlap
 };
-
-// -----------------------------------------------------------------------
-// Scaffold — ordered sequence of contigs
-// -----------------------------------------------------------------------
 
 struct Scaffold {
     std::vector<ScaffoldEntry> entries;
@@ -50,17 +55,11 @@ struct Scaffold {
     [[nodiscard]] size_t contigCount() const { return entries.size(); }
 };
 
-// -----------------------------------------------------------------------
-// Scaffolder class
-// -----------------------------------------------------------------------
-
 class ContigScaffolder {
 
 private:
-
     const std::vector<ContigTraversal::Contig>& contigs_;
     const DeBruijnGraph& graph_;
-    BranchResolution strategy_;
     std::vector<Scaffold> scaffolds_;
 
     // Connection maps built from contig boundary nodes.
@@ -79,12 +78,22 @@ private:
     void buildConnectionMap();
 
     /**
+     * @brief Scores a candidate contig for branch resolution.
+     *
+     * Computes a weighted score from the enabled metrics in strategy_.weights.
+     * Higher score = more likely to be the correct next contig.
+     *
+     * @param contigIndex Index of the candidate contig.
+     * @return Weighted score for this contig.
+     */
+    [[nodiscard]] double scoreContig(size_t contigIndex) const;
+
+    /**
      * @brief Resolves the next contig index from a given boundary node.
      *
-     * Looks up which contigs start at boundaryNode and applies the
-     * resolution strategy to pick one:
-     * - Skip:   returns npos if more than one contig starts at the node
-     * - Greedy: returns the index of the longest unvisited outgoing contig
+     * If strategy_.skipAmbiguous is true and more than one contig starts
+     * at boundaryNode, returns npos. Otherwise scores all candidates using
+     * scoreContig() and returns the highest scoring unvisited contig.
      *
      * @param boundaryNode The endNode of the current contig.
      * @param visited      Tracks which contigs are already assigned.
