@@ -30,6 +30,7 @@ add_executable(ContigAssembly
         DataProcessing/KmerEncoding.cpp
         GenomeAssembly/DeBruijnGraph.cpp
         GenomeAssembly/ContigTraversal.cpp
+        GenomeAssembly/ContigScaffolder.h
 )
 
 add_executable(InitializationTests
@@ -55,6 +56,7 @@ add_executable(AssemblyTests
         GenomeAssembly/ContigTraversal.h
         GenomeAssembly/ContigTraversal.cpp
         DataList.cpp
+        GenomeAssembly/ContigScaffolder.h
 )
 
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
