@@ -1,5 +1,7 @@
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <string>
 
 #include "../DataList.h"
 #include "../DataInitialization/DNASequence.h"
@@ -10,84 +12,229 @@
 
 #include "../GenomeAssembly/DeBruijnGraph.h"
 #include "../GenomeAssembly/ContigTraversal.h"
+#include "../GenomeAssembly/ContigScaffolder.h"
 
-// PIPELINE STAGES
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+
+static constexpr size_t UNKNOWN_GAP_NS   = 100;
+static constexpr size_t FASTA_LINE_WIDTH = 60;
+
+// ─────────────────────────────────────────────
+// STAGE 1 — Load reads from FASTQ into KmerTable
+// ─────────────────────────────────────────────
 
 /**
- * @brief Loads a FASTA file into a DNASequence.
- * @param path Path to the FASTA file.
- * @return Parsed DNASequence.
+ * @brief Opens a FASTQ file and encodes all reads into a KmerTable.
+ *
+ * The KmerTable is sized using totalBases (sum of all read lengths) and k.
+ * It must be kept alive for the duration of the pipeline run, as ContigScaffolder
+ * holds a const pointer to it for scored strategy frequency calculations.
+ *
+ * @param path       Path to the FASTQ file.
+ * @param k          K-mer size for encoding.
+ * @param totalBases Estimated total bases across all reads — used to size the table.
+ * @return Populated KmerTable.
+ * @throws std::runtime_error if the file cannot be opened or contains no reads.
  */
-static DNASequence loadGenome(const std::string& path) {
+static KmerTable loadReads(const std::string& path, size_t k, size_t totalBases) {
     std::ifstream file(path);
     if (!file.is_open())
         throw std::runtime_error("Could not open file: " + path);
 
-    auto genomeOpt = SequenceReader::readFasta(file);
+    KmerTable kTable(totalBases, k);
+    SequenceReader::encodeAllReads(file, k, kTable);
     file.close();
 
-    if (!genomeOpt)
-        throw std::runtime_error("File was empty: " + path);
-
-    return *genomeOpt;
+    std::cout << "Reads encoded:   " << kTable.getNumItems() << " unique k-mers\n";
+    return kTable;
 }
 
+// ─────────────────────────────────────────────
+// STAGE 2 — Build De Bruijn graph from KmerTable
+// ─────────────────────────────────────────────
+
 /**
- * @brief Encodes a DNA sequence into a DeBruijn graph.
- * @param sequence Input DNA sequence string.
- * @param k K-mer size to use for encoding.
- * @param circular If true, circularizes the sequence before encoding.
- * @return Populated DeBruijnGraph ready for traversal.
+ * @brief Populates a DeBruijnGraph from an already-encoded KmerTable.
+ *
+ * Pre-sizes the graph to 2x the number of unique k-mers to reduce rehashing.
+ * Each k-mer is inserted once per occurrence count stored in the table.
+ *
+ * @param kTable Populated KmerTable from loadReads().
+ * @param k      K-mer size — must match the k used to build kTable.
+ * @return Populated DeBruijnGraph ready for contig traversal.
  */
-static DeBruijnGraph buildGraph(const std::string& sequence, int k, bool circular = false) {
-    std::string inputSequence = circular
-        ? sequence + sequence.substr(0, k - 1)
-        : sequence;
-
-    KmerTable kTable(inputSequence.length(), k);
-    KmerEncoding::encodeSequence(inputSequence, k, kTable);
-
+static DeBruijnGraph buildGraph(const KmerTable& kTable, size_t k) {
     DeBruijnGraph graph(k, kTable.getNumItems() * 2);
+
     for (const auto& entry : kTable)
         for (size_t i = 0; i < entry.value; ++i)
             graph.addKmer(entry.key);
 
-    std::cout << "Unique k-mers:   " << kTable.getNumItems() << "\n";
     std::cout << "Graph built:     " << graph.getNodeCount() << " nodes, "
               << graph.getEdgeCount() << " edges\n";
-
     return graph;
 }
 
+// ─────────────────────────────────────────────
+// STAGE 3 — Contig traversal
+// ─────────────────────────────────────────────
+
 /**
- * @brief Runs contig traversal on the graph and reports results.
- * @param graph Populated DeBruijnGraph to traverse.
- * @param sequence Original DNASequence for reference.
+ * @brief Runs ContigTraversal on the graph and returns the contig list.
+ *
+ * Prints contig stats to stdout as a summary before returning.
+ *
+ * @param graph Populated DeBruijnGraph.
+ * @return Vector of Contig structs produced by the traversal.
  */
-static void assembleContigs(DeBruijnGraph& graph, const DNASequence& sequence, int k) {
+static std::vector<ContigTraversal::Contig> buildContigs(DeBruijnGraph& graph) {
     ContigTraversal ct(graph);
     ct.computeContigs();
     ct.printStats();
+    return ct.getContigs();
 }
 
-// MAIN FUNCTION
+// ─────────────────────────────────────────────
+// STAGE 4 — Scaffold and report
+// ─────────────────────────────────────────────
+
+/**
+ * @brief Runs ContigScaffolder with the given strategy and prints stats.
+ *
+ * A fresh DeBruijnGraph and ContigTraversal are produced per call since
+ * each strategy run is fully independent (rebuild everything per strategy).
+ * The KmerTable pointer is passed through for scored strategy frequency scoring.
+ *
+ * @param contigs    Contigs from Stage 3.
+ * @param graph      DeBruijnGraph from Stage 2.
+ * @param strategy   Resolution strategy to use.
+ * @param kTable     KmerTable for frequency-based scoring (may be nullptr for non-scored).
+ * @return Populated ContigScaffolder after buildScaffolds() is called.
+ */
+static ContigScaffolder buildScaffolds(
+    const std::vector<ContigTraversal::Contig>& contigs,
+    const DeBruijnGraph& graph,
+    ResolutionStrategy strategy,
+    const KmerTable* kTable)
+{
+    ContigScaffolder scaffolder(contigs, graph, strategy, kTable);
+    scaffolder.buildScaffolds();
+    scaffolder.printStats();
+    return scaffolder;
+}
+
+// ─────────────────────────────────────────────
+// STAGE 5 — Write gap-aware FASTA output
+// ─────────────────────────────────────────────
+
+/**
+ * @brief Writes scaffolds to a gap-aware FASTA file.
+ *
+ * Each scaffold is written as a single FASTA entry. Contigs within a scaffold
+ * are joined directly (DIRECT_OVERLAP) or separated by 100 N's (UNKNOWN_GAP).
+ * Lines are wrapped at FASTA_LINE_WIDTH (60) characters.
+ *
+ * Output filename format: scaffolds_k{k}_{strategyName}.fna
+ *
+ * @param scaffolds    Scaffolds produced by ContigScaffolder.
+ * @param contigs      Contig list required to recover sequences.
+ * @param k            K value used for this run — used in the filename.
+ * @param strategyName Human-readable strategy label ("skip", "greedy", "scored").
+ */
+static void writeScaffoldFasta(
+    const std::vector<Scaffold>& scaffolds,
+    const std::vector<ContigTraversal::Contig>& contigs,
+    size_t k,
+    const std::string& strategyName)
+{
+    const std::string filename =
+        "../Data/Results/scaffolds_k" + std::to_string(k) + "_" + strategyName + ".fna";
+
+    std::ofstream out(filename);
+    if (!out.is_open())
+        throw std::runtime_error("Could not write output file: " + filename);
+
+    for (size_t i = 0; i < scaffolds.size(); ++i) {
+        const Scaffold& scaffold = scaffolds[i];
+
+        // Build the full scaffold sequence
+        std::string scaffoldSeq;
+        for (size_t j = 0; j < scaffold.entries.size(); ++j) {
+            const ScaffoldEntry& entry = scaffold.entries[j];
+            scaffoldSeq += contigs[entry.contigIndex].sequence;
+
+            // Insert N's for unresolved gaps — but not after the final contig
+            if (j + 1 < scaffold.entries.size() &&
+                entry.gapAfter == ScaffoldEntry::UNKNOWN_GAP) {
+                scaffoldSeq += std::string(UNKNOWN_GAP_NS, 'N');
+            }
+        }
+
+        // FASTA header
+        out << ">Scaffold_" << (i + 1)
+            << " contigs=" << scaffold.entries.size()
+            << (scaffold.isCircular ? " circular" : "")
+            << " strategy=" << strategyName
+            << " k=" << k
+            << "\n";
+
+        // Sequence wrapped at 60 chars per line
+        for (size_t pos = 0; pos < scaffoldSeq.size(); pos += FASTA_LINE_WIDTH)
+            out << scaffoldSeq.substr(pos, FASTA_LINE_WIDTH) << "\n";
+    }
+
+    out.close();
+    std::cout << "Output written:  " << filename << "\n";
+}
+
+// ─────────────────────────────────────────────
+// MAIN
+// ─────────────────────────────────────────────
 
 int main() {
     try {
-        const std::string path = "../Data/" + sequence[4];
+        // FASTQ file path — update sequence index as needed
+        const std::string path = "../Data/" + sequence[7];
 
-        DNASequence genome = loadGenome(path);
-        std::cout << genome.getName() << "\n";
-        std::cout << "Sequence length: " << genome.getLength() << " bases\n";
-        std::cout << "--------------------------------------\n";
+        // Estimated total bases — adjust to match your reads file
+        // A rough upper bound is fine; KmerTable sizes conservatively
+        const size_t estimatedTotalBases = 100000;
 
-        std::vector testCases = {5, 20, 40, 60};
+        const std::vector<size_t> kValues = {9};
 
-        for (int i = 0 ; i < testCases.size(); i++) {
-            int k = testCases[i];
-            std::cout << "TEST CASE [" << i + 1 << "]: k = " << k << std::endl;
-            DeBruijnGraph graph = buildGraph(genome.getSequence(), k, false);
-            assembleContigs(graph, genome, k);
+        const std::vector<std::pair<ResolutionStrategy, std::string>> strategies = {
+            { ResolutionStrategy::skip(),   "skip"   },
+            { ResolutionStrategy::greedy(), "greedy" },
+            { ResolutionStrategy::scored(), "scored" },
+        };
+
+        for (size_t k : kValues) {
+            std::cout << "======================================\n";
+            std::cout << "K = " << k << "\n";
+            std::cout << "======================================\n";
+
+            for (const auto& [strategy, strategyName] : strategies) {
+                std::cout << "--------------------------------------\n";
+                std::cout << "Strategy: " << strategyName << "\n";
+                std::cout << "--------------------------------------\n";
+
+                // Each run is fully independent — rebuild everything
+                KmerTable kTable  = loadReads(path, k, estimatedTotalBases);
+                DeBruijnGraph graph = buildGraph(kTable, k);
+                auto contigs        = buildContigs(graph);
+
+                // Pass kTable pointer only for scored — skip/greedy don't need it
+                const KmerTable* kTablePtr =
+                    (strategyName == "scored") ? &kTable : nullptr;
+
+                ContigScaffolder scaffolder =
+                    buildScaffolds(contigs, graph, strategy, kTablePtr);
+
+                writeScaffoldFasta(
+                    scaffolder.getScaffolds(), contigs, k, strategyName);
+            }
         }
 
     } catch (const std::exception& e) {

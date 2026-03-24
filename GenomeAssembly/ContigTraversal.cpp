@@ -17,7 +17,7 @@ void ContigTraversal::initializeAdjacency() {
         const auto* data = graph_.findNode(node);
         auto [neighborRef, isNew] = adjCopy_.insert(node);
         neighborRef = data->getNeighbors();
-        std::sort(neighborRef.begin(), neighborRef.end());
+        std::sort(neighborRef.begin(), neighborRef.end()); // FOR TESTING, REMOVE FOR LARGE SEQUENCES
     }
 }
 

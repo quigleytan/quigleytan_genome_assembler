@@ -170,9 +170,8 @@ Scaffold ContigScaffolder::walkScaffold(size_t startIndex, std::vector<bool>& vi
 }
 
 bool ContigScaffolder::isScaffoldStart(size_t contigIndex) const {
-    if (endNodeMap_.find(contigs_[contigIndex].startNode))
-        return true;
-    return false;
+    const auto* predecessors = endNodeMap_.find(contigs_[contigIndex].startNode);
+    return predecessors == nullptr || predecessors->empty();
 }
 
 // PUBLIC
