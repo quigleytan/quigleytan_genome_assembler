@@ -3,12 +3,12 @@
 #include <vector>
 #include <iomanip>
 
-#include "DataInitialization/DNASequence.h"
-#include "DataInitialization/SequenceReader.h"
-#include "DataProcessing/KmerEncoding.h"
-#include "DataProcessing/KmerTable.h"
-#include "GenomeAssembly/DeBruijnGraph.h"
-#include "GenomeAssembly/EulerianTraversal.h"
+#include "../DataInitialization/DNASequence.h"
+#include "../DataInitialization/SequenceReader.h"
+#include "../DataProcessing/KmerEncoding.h"
+#include "../DataProcessing/KmerTable.h"
+#include "../GenomeAssembly/DeBruijnGraph.h"
+#include "../GenomeAssembly/EulerianTraversal.h"
 
 // HELPER FUNCTION
 

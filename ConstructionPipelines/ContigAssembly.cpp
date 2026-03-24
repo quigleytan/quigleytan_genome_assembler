@@ -1,15 +1,15 @@
 #include <fstream>
 #include <iostream>
 
-#include "DataList.h"
-#include "DataInitialization/DNASequence.h"
-#include "DataInitialization/SequenceReader.h"
+#include "../DataList.h"
+#include "../DataInitialization/DNASequence.h"
+#include "../DataInitialization/SequenceReader.h"
 
-#include "DataProcessing/KmerEncoding.h"
-#include "DataProcessing/KmerTable.h"
+#include "../DataProcessing/KmerEncoding.h"
+#include "../DataProcessing/KmerTable.h"
 
-#include "GenomeAssembly/DeBruijnGraph.h"
-#include "GenomeAssembly/ContigTraversal.h"
+#include "../GenomeAssembly/DeBruijnGraph.h"
+#include "../GenomeAssembly/ContigTraversal.h"
 
 // PIPELINE STAGES
 
