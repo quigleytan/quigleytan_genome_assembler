@@ -115,10 +115,45 @@ private:
      */
     void buildConnectionMap();
 
+    /**
+     * @brief Computes a length-based score for a contig.
+     *
+     * Longer contigs typically have greater k-mer support and fewer unresolved
+     * ambiguities, making them more likely to represent correct assemblies.
+     * This function assigns higher scores to longer contigs by dividing the contig's length
+     * by the max length of all contigs.
+     *
+     * @param contig Contig to be evaluated.
+     * @return Net score based on contig length from [0, 1], to be weighted.
+     */
     [[nodiscard]] double computeLengthScore(const ContigTraversal::Contig& contig) const;
 
+    /**
+     * @brief Computes a normalized frequency-based score for a contig.
+     *
+     * Evaluates the level of support for a contig by examining the frequencies (counts)
+     * of its constituent k-mers in the k-mer table.
+     * The average k-mer frequency is computed across the contig, then normalized
+     * by an upper bound defined as (mean + 2 * standard deviation) of the observed
+     * k-mer counts. This reduces the influence of extreme high-frequency k-mers
+     * (e.g., repeats) while still favoring consistently well-supported contigs.
+     *
+     * @param contig Contig to be evaluated.
+     * @return Normalized net frequency score from [0, 1], to be weighted.
+     */
     [[nodiscard]] double computeFrequencyScore(const ContigTraversal::Contig& contig) const;
 
+    /**
+     * @brief Computes an overlap consistency score for a contig.
+     *
+     * Measures how well the suffix of the contig's sequence
+     * aligns with the expected sequence encoded by its terminal graph node.
+     * The expected suffix is decoded from the contig's end node and compared
+     * base-by-base with the actual suffix of the contig sequence.
+     *
+     * @param contig Contig to be evaluated.
+     * @return Net overlap consistency score from [0, 1], to be weighted.
+     */
     [[nodiscard]] double computeOverlapScore(const ContigTraversal::Contig& contig) const;
 
     /**

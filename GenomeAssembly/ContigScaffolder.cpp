@@ -33,7 +33,6 @@ void ContigScaffolder::buildConnectionMap() {
         auto [startVec, _2] = startNodeMap_.insert(contigs_[i].startNode);
         startVec.push_back(i);
     }
-
 }
 
 double ContigScaffolder::computeLengthScore(const ContigTraversal::Contig& contig) const {
@@ -87,8 +86,7 @@ double ContigScaffolder::computeOverlapScore(const ContigTraversal::Contig& cont
         return 0.0;
 
     std::string expectedSuffix = KmerEncoding::decode(contig.endNode, nodeLen);
-    std::string actualSuffix   = contig.sequence.substr(
-        contig.sequence.length() - nodeLen);
+    std::string actualSuffix   = contig.sequence.substr(contig.sequence.length() - nodeLen);
 
     size_t matches = 0;
     for (size_t i = 0; i < nodeLen; ++i)
