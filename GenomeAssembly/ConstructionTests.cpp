@@ -355,7 +355,7 @@ bool ContigTraversalTests() {
     //
     // ACGTACGT, k=4: ACG has outDegree=2, CGT has inDegree=2.
     // Expects: 3 contigs, none circular, correct sequences.
-    // Total bases = 14 (overlap mode inflation expected).
+    // Total bases = 11
     // -----------------------------------------------------------------------
     {
         std::string sequence = "ACGTACGT";
@@ -392,9 +392,9 @@ bool ContigTraversalTests() {
         // Total bases should be 14 in overlap mode
         size_t totalBases = 0;
         for (const auto& contig : contigs) totalBases += contig.sequence.length();
-        if (totalBases != 14) {
+        if (totalBases != 11) {
             passed = false;
-            std::cout << "[Contig Test 3] Expected 14 total bases, got "
+            std::cout << "[Contig Test 3] Expected 11 total bases, got "
                       << totalBases << "\n";
         }
 

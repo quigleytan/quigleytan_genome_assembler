@@ -74,14 +74,14 @@ static void assembleContigs(DeBruijnGraph& graph, const DNASequence& sequence, i
 
 int main() {
     try {
-        const std::string path = "../Data/" + sequence[4];
+        const std::string path = "../Data/" + sequence[0];
 
         DNASequence genome = loadGenome(path);
         std::cout << genome.getName() << "\n";
         std::cout << "Sequence length: " << genome.getLength() << " bases\n";
         std::cout << "--------------------------------------\n";
 
-        std::vector testCases = {5, 20, 40, 60};
+        std::vector testCases = {3, 4, 5};
 
         for (int i = 0 ; i < testCases.size(); i++) {
             int k = testCases[i];

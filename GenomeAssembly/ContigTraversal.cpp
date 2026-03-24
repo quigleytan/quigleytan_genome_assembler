@@ -56,15 +56,11 @@ ContigTraversal::Contig ContigTraversal::walkContig(NodeId startNode) {
             break;
         }
 
-        // Appending the last char of the next node
         result.sequence += KmerEncoding::decode(next, nodeLen).back();
 
-        // Boundary detection - Checks for convergence/divergence and sink (end) nodes.
         const auto* nextData = graph_.findNode(next);
-        bool isBoundary = nextData->getInDegree() > 1  ||
-                          nextData->getOutDegree() > 1 ||
-                          nextData->getOutDegree() == 0;
-        if (isBoundary) { // Terminates the walk for the node.
+        // STOP if next is not 1-in-1-out
+        if (nextData->getInDegree() != 1 || nextData->getOutDegree() != 1) {
             result.endNode = next;
             break;
         }

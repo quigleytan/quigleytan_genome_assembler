@@ -10,6 +10,7 @@
  * - Operates on an already-constructed DeBruijnGraph passed by reference.
  * - Contig sequences are produced in overlap mode — boundary nodes contribute
  *   their full k-1 chars to adjacent contigs.
+ * TODO: Build in handling for starting traversal at "sinks".
  */
 
 #ifndef CONTIG_TRAVERSAL_H

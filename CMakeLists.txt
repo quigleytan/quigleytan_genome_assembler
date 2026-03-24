@@ -26,8 +26,8 @@ add_executable(EulerianAssembly
         GenomeAssembly/EulerianTraversal.cpp
 )
 
-add_executable(ContigAssembly
-        ConstructionPipelines/ContigAssembly.cpp
+add_executable(FastaContigAssembly
+        ConstructionPipelines/FastaContigAssembly.cpp
         DataList.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
@@ -35,11 +35,11 @@ add_executable(ContigAssembly
         GenomeAssembly/DeBruijnGraph.cpp
         GenomeAssembly/ContigTraversal.cpp
         GenomeAssembly/ContigScaffolder.cpp
-        ConstructionPipelines/ScaffoldAssembly.cpp
 )
 
-add_executable(ContigTests
-        GenomeAssembly/FastqContigTests.cpp
+add_executable(FastqContigAssembly
+        ConstructionPipelines/FastqContigAssembly.cpp
+        DataList.cpp
         DataInitialization/DNASequence.cpp
         DataInitialization/SequenceReader.cpp
         DataProcessing/KmerEncoding.cpp
@@ -60,7 +60,7 @@ add_executable(ProcessingTests
         DataInitialization/DNASequence.cpp
 )
 
-add_executable(AssemblyTests
+add_executable(ConstructionTests
         DataList.cpp
         GenomeAssembly/ConstructionTests.cpp
         GenomeAssembly/DeBruijnGraph.cpp
@@ -71,12 +71,14 @@ add_executable(AssemblyTests
         GenomeAssembly/ContigScaffolder.cpp
 )
 
+
+
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 
 target_include_directories(ScaffoldAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(EulerianAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
-target_include_directories(ContigAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(FastaContigAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(InitializationTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(ProcessingTests PRIVATE ${PROJECT_INCLUDE_DIR})
-target_include_directories(AssemblyTests PRIVATE ${PROJECT_INCLUDE_DIR})
-target_include_directories(ContigTests PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(ConstructionTests PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(FastqContigAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
