@@ -10,17 +10,16 @@
 // PRIVATE
 
 double mean(const std::vector<double>& data) {
-    double sum = std::accumulate(data.begin(), data.end(), 0.0);
-    return sum / data.size();
+    if (data.empty()) return 0.0;
+    return std::accumulate(data.begin(), data.end(), 0.0) / data.size();
 }
 
 double stddev(const std::vector<double>& data) {
+    if (data.size() < 2) return 0.0;
     double m = mean(data);
     double sum = 0.0;
-    for (double x : data) {
-        sum += (x - m) * (x - m);
-    }
-    return std::sqrt(sum / data.size()); // population std dev
+    for (double x : data) sum += (x - m) * (x - m);
+    return std::sqrt(sum / data.size());
 }
 
 void ContigScaffolder::buildConnectionMap() {
@@ -161,18 +160,33 @@ Scaffold ContigScaffolder::walkScaffold(size_t startIndex, std::vector<bool>& vi
         contigIndex = next;
     }
 
-    if (scaffold.entries.back().contigIndex == startIndex) {
-        scaffold.isCircular = true;
+    if (scaffold.entries.size() > 1) {
+        NodeId lastEnd   = contigs_[scaffold.entries.back().contigIndex].endNode;
+        NodeId firstStart = contigs_[scaffold.entries.front().contigIndex].startNode;
+        scaffold.isCircular = (lastEnd == firstStart);
     }
 
     return scaffold;
 }
 
 bool ContigScaffolder::isScaffoldStart(size_t contigIndex) const {
-    return endNodeMap_.find(contigs_[contigIndex].endNode);
+    if (endNodeMap_.find(contigs_[contigIndex].startNode))
+        return true;
+    return false;
 }
 
 // PUBLIC
+
+ContigScaffolder::ContigScaffolder(const std::vector<ContigTraversal::Contig>& contigs,
+                                   const DeBruijnGraph& graph,
+                                   ResolutionStrategy strategy,
+                                   const KmerTable* kmerTable)
+    : contigs_(contigs),
+      graph_(graph),
+      kmerTable_(kmerTable),
+      strategy_(strategy),
+      endNodeMap_(contigs.size() * 2),
+      startNodeMap_(contigs.size() * 2) {}
 
 void ContigScaffolder::buildScaffolds() {
     scaffolds_.clear();
