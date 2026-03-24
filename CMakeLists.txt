@@ -38,6 +38,15 @@ add_executable(ContigAssembly
         ConstructionPipelines/ScaffoldAssembly.cpp
 )
 
+add_executable(ContigTests
+        GenomeAssembly/FastqContigTests.cpp
+        DataInitialization/DNASequence.cpp
+        DataInitialization/SequenceReader.cpp
+        DataProcessing/KmerEncoding.cpp
+        GenomeAssembly/DeBruijnGraph.cpp
+        GenomeAssembly/ContigTraversal.cpp
+)
+
 add_executable(InitializationTests
         DataInitialization/InitializationTests.cpp
         DataInitialization/DNASequence.cpp
@@ -70,3 +79,4 @@ target_include_directories(ContigAssembly PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(InitializationTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(ProcessingTests PRIVATE ${PROJECT_INCLUDE_DIR})
 target_include_directories(AssemblyTests PRIVATE ${PROJECT_INCLUDE_DIR})
+target_include_directories(ContigTests PRIVATE ${PROJECT_INCLUDE_DIR})
