@@ -1,7 +1,7 @@
 #include "DataList.h"
 
 std::vector<std::string> sequence = {
-    "contig test sequence.fna",
+    "practice sequence.fna",
     "[1]Escherichia phage phiX174.fna",
     "[2]Haemophilus influenzae",
     "[3]Escherichia phage Lambda.fna",
