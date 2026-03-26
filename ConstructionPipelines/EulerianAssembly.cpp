@@ -148,7 +148,7 @@ static void reportResults(const DNASequence& original, const std::string& assemb
 
 int main() {
     try {
-        const std::string path = "../Data/[6]Escherichia coli str. K-12 substr.fna";
+        const std::string path = "../Data/[1]Escherichia phage phiX174.fna";
 
         DNASequence genome = loadGenome(path);
         std::cout << genome.getName() << "\n";

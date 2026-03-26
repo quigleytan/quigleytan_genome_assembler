@@ -81,7 +81,7 @@ int main() {
         std::cout << "Sequence length: " << genome.getLength() << " bases\n";
         std::cout << "--------------------------------------\n";
 
-        std::vector testCases = {3, 4, 5};
+        std::vector testCases = {5, 20, 40, 60};
 
         for (int i = 0 ; i < testCases.size(); i++) {
             int k = testCases[i];

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <ostream>
 #include <vector>
-#include <stdexcept>
 
 #include "DeBruijnGraph.h"
 #include "DataInitialization/DNASequence.h"
