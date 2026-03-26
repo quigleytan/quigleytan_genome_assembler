@@ -35,9 +35,12 @@ protected:
      *
      * Overrides the rehash function to disable rehashing as the table is initialized
      * to handle the expected number of unique kmers.
+     * Throws a runtime_error if the table was sized incorrectly and rehash is invoked.
      */
     void rehash() override {
-        //does nothing
+        throw std::runtime_error(
+            "KmerTable exceeded capacity — increase totalBases estimate at construction"
+        );
     }
 
     /**

@@ -136,3 +136,13 @@ Reference source for usage of auto from Module 1
 Use of nodiscard: https://stackoverflow.com/questions/76489630/explanation-of-nodiscard-in-c17
 
 Use of explicit: https://www.geeksforgeeks.org/cpp/use-of-explicit-keyword-in-cpp/
+
+Step 1 — CMakeLists.txt changes (FetchContent + Visualizer executable)
+Step 2 — VisData.h (all shared structs, no dependencies)
+Step 3 — Recorder.h (header-only step recorder, optional ptr in traversal classes)
+Step 4 — DataExporter.h/.cpp (writes .visdata from VisSession)
+Step 5 — DataLoader.h/.cpp (reads .visdata back into VisSession)
+Step 6 — Modify ContigTraversal.cpp (~10 lines, non-breaking)
+Step 7 — Modify ContigScaffolder.cpp (~10 lines, non-breaking)
+Step 8 — ContigView.h/.cpp (bar renderer + animation)
+Step 9 — VisualizerApp.cpp (window, loop, top-level state)

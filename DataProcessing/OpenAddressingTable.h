@@ -53,6 +53,24 @@ protected:
     }
 
     /**
+     * @brief Raw insert used only during rehashing.
+     * Bypasses onInitial and onDuplicate hooks entirely.
+     * Assumes the key does not already exist in the table.
+     */
+    void rawInsert(const Key& key, const Value& value) {
+        size_t index = hashKey(key);
+        size_t i = 0;
+        while (items[index].status == TAKEN) {
+            i++;
+            index = (index + i) % items.size();
+        }
+        items[index].key    = key;
+        items[index].value  = value;
+        items[index].status = TAKEN;
+        ++numItems;
+    }
+
+    /**
      * @brief Rebuilds and resizes the hash table to accommodate increased requirements.
      *
      * This method is called when the load factor exceeds 0.5, resizing the table
@@ -64,9 +82,9 @@ protected:
         numItems = 0;
         items.resize(nextPrime(preRehash.size() * 2));
 
-        for (size_t i = 0; i < preRehash.size(); ++i) {
-            if (preRehash[i].status == TAKEN) {
-                insert(preRehash[i].key).first = preRehash[i].value;
+        for (const auto& item : preRehash) {
+            if (item.status == TAKEN) {
+                rawInsert(item.key, item.value); // ← no hooks, no corruption
             }
         }
     }
@@ -225,10 +243,14 @@ public:
 
         size_t index = hashKey(insertKey);
         size_t i = 0;
+        const size_t maxProbes = items.size();
 
         while (items[index].status == TAKEN && items[index].key != insertKey) {
             i++;
-            index = (index + i) % items.size(); // linear probing
+            index = (index + i) % items.size(); // Linear probing strategy.
+
+            if (i >= maxProbes) // Announces error in table filling.
+                throw std::runtime_error("Hash table is full — rehash failed or table undersized");
         }
 
         if (items[index].status == TAKEN) {
@@ -237,7 +259,7 @@ public:
             return {items[index].value, false};
         }
         items[index].key = insertKey;
-        items[index].value = Value{}; // default construct
+        items[index].value = Value{};
         items[index].status = TAKEN;
         ++numItems;
 

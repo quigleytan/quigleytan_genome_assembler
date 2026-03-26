@@ -38,18 +38,19 @@ const DeBruijnGraph::NodeData *DeBruijnGraph::findNode(NodeId node) const{
 }
 
 void DeBruijnGraph::addKmer(NodeId inputKmer) {
-    // Split k-mer into prefix and suffix (k-1)-mers
     auto [prefix, suffix] = chop(inputKmer);
 
-    auto [from, prefixNew] = table_.insert(prefix);
-    auto [to,   suffixNew] = table_.insert(suffix);
+    auto prefixNew = table_.insert(prefix).second;
+    auto suffixNew = table_.insert(suffix).second;
 
-    // Updates the number of nodes in the graph if it is a new instance of a k-1 mer.
     if (prefixNew) nodeCount_++;
     if (suffixNew) nodeCount_++;
 
-    from.addNeighbor(suffix);
-    to.incrementInDegree();
+    NodeData* from = table_.find(prefix);
+    NodeData* to   = table_.find(suffix);
+
+    from->addNeighbor(suffix);
+    to->incrementInDegree();
     edgeCount_++;
 }
 

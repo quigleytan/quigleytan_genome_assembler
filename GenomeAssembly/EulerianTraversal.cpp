@@ -8,14 +8,16 @@
 // PRIVATE HELPER FUNCTIONS
 
 void EulerianTraversal::initializeAdjacency() {
+
+    for (NodeId node : graph_.getAllNodes()) {
+        adjCopy_.insert(node);
+    }
+
     for (NodeId node : graph_.getAllNodes()) {
         const auto* data = graph_.findNode(node);
-
-        auto [neighborRef, isNew] = adjCopy_.insert(node);
-        neighborRef = data->getNeighbors();
-
-        // Sort neighbors for deterministic traversal order
-        std::sort(neighborRef.begin(), neighborRef.end());
+        auto* neighborRef = adjCopy_.find(node);  // find() returns pointer, stable after inserts done
+        *neighborRef = data->getNeighbors();
+        std::sort(neighborRef->begin(), neighborRef->end());
     }
 }
 

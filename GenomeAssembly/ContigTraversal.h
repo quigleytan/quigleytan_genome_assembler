@@ -20,6 +20,7 @@
 #include <string>
 
 #include "KmerTypes.h"
+#include "Recorder.h"
 #include "GenomeAssembly/DeBruijnGraph.h"
 #include "DataProcessing/OpenAddressingTable.h"
 
@@ -85,7 +86,7 @@ public:
      *
      * @param g Input graph to be traversed.
      */
-    explicit ContigTraversal(DeBruijnGraph& g);
+    explicit ContigTraversal(DeBruijnGraph& g, Recorder* recorder = nullptr);
 
     /**
     * @brief Constructs all contigs from the graph in two phases.

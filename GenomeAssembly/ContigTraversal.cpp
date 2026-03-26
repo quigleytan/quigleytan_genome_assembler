@@ -8,16 +8,20 @@
 // PRIVATE HELPER FUNCTIONS
 
 void ContigTraversal::initializeAdjacency() {
-    // Pre-allocates size to adjCopy_ to avoid rehashing pointer failure.
     adjCopy_ = OpenAddressingTable<NodeId, std::vector<NodeId>>(
         graph_.getNodeCount() * 2);
 
-    // Inserts and sorts each neighbor list to adjCopy_.
+    // Pass 1: Insert all nodes
+    for (NodeId node : graph_.getAllNodes()) {
+        adjCopy_.insert(node);
+    }
+
+    // Pass 2: Assign and sort neighbor lists
     for (NodeId node : graph_.getAllNodes()) {
         const auto* data = graph_.findNode(node);
-        auto [neighborRef, isNew] = adjCopy_.insert(node);
-        neighborRef = data->getNeighbors();
-        std::sort(neighborRef.begin(), neighborRef.end()); // FOR TESTING, REMOVE FOR LARGE SEQUENCES
+        auto* neighborRef = adjCopy_.find(node);
+        *neighborRef = data->getNeighbors();
+        std::sort(neighborRef->begin(), neighborRef->end());
     }
 }
 
@@ -45,21 +49,18 @@ ContigTraversal::Contig ContigTraversal::walkContig(NodeId startNode) {
 
         NodeId next = neighbors->back();
         neighbors->pop_back();
+        result.sequence += KmerEncoding::decode(next, nodeLen).back();
 
-        // Circularity detection, walked around back to the start node.
         if (next == startNode) {
             result.endNode = startNode;
             result.isCircular = true;
-            size_t overlap = nodeLen - 1;
+            size_t overlap = nodeLen - 1; // k-2
             if (result.sequence.length() > overlap)
-                result.sequence.resize(result.sequence.length() - overlap); // Trims the k-2 circular join overlap.
+                result.sequence.resize(result.sequence.length() - overlap);
             break;
         }
 
-        result.sequence += KmerEncoding::decode(next, nodeLen).back();
-
         const auto* nextData = graph_.findNode(next);
-        // STOP if next is not 1-in-1-out
         if (nextData->getInDegree() != 1 || nextData->getOutDegree() != 1) {
             result.endNode = next;
             break;
@@ -87,7 +88,7 @@ void ContigTraversal::handleIsolatedCycles() {
 
 // PUBLIC
 
-ContigTraversal::ContigTraversal(DeBruijnGraph& g)
+ContigTraversal::ContigTraversal(DeBruijnGraph& g, Recorder* recorder)
     : graph_(g), adjCopy_(g.getNodeCount() * 2) {}
 
 void ContigTraversal::computeContigs() {
